@@ -25,15 +25,14 @@ key is always bound to an IP allowlist, so a key copied off your server is of no
 A destination is an address of yours on one network. Add one with
 `POST /v1/payout-destinations`, or pay an address directly, which adds it.
 
-- **A new destination waits** before it can be paid: 24 hours in live, 5 minutes in the sandbox.
+- **A new destination is paid within about a minute,** once Nowgate's signer has registered it.
   `destination.created` is sent at once, so your systems can raise an alarm about an address
-  nobody meant to add, and `destination.active` once it can be paid. The wait is what keeps a
-  stolen key from paying everything out to its thief.
+  nobody meant to add, and `destination.active` once it can be paid.
 - **Addresses are checked** before they are taken: each network's format and checksum, and never
   one of Nowgate's own addresses. On TRON give the `T…` form.
 - **Disabling** one (`DELETE /v1/payout-destinations/{id}`) stops it at once. Payouts still waiting
   for it fail, and what they held comes back to your balance. Adding the address again makes a
-  new destination, which waits like any other.
+  new destination.
 - You can have up to 1,000 enabled destinations.
 
 ## Making a payout
@@ -79,7 +78,7 @@ it takes from your balance, and `amount_sent` what the destination receives.
 | --------------------- | ------------------------------------------------------------------------------------------------------- |
 | `awaiting_approval`   | Your account requires a person's approval, and nobody has given it yet.                                 |
 | `scheduled`           | `send_at` is still ahead.                                                                               |
-| `waiting_destination` | Its destination is still waiting.                                                                       |
+| `waiting_destination` | Its destination is new, and Nowgate's signer is registering it: within about a minute.                  |
 | `queued`              | Ready, and about to be sent. `waiting_reason` says why when it waits longer than usual.                 |
 | `sending`             | Signed and broadcast; `transaction` shows it. Not final yet.                                            |
 | `finished`            | Final on the chain.                                                                                     |

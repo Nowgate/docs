@@ -14,8 +14,8 @@ The network fee comes out of the refund by default (`fee_paid_by: "payee"`). Sen
 
 If you know the payer's address, send it with the refund. Otherwise the refund waits in
 `awaiting_address`, and its `refund_url` opens a page where the payer gives their address, once.
-Either way the address becomes one of your destinations and waits like any new one before it is
-paid: 24 hours in live, 5 minutes in the sandbox.
+Either way the address becomes one of your destinations, paid within about a minute like any new
+one.
 
 The payment keeps account of its refunds: `refund_pending` is what refunds under way will return,
 and `amount_refunded` what finished ones did. Once that reaches `amount_credited`, the payment is
