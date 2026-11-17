@@ -1,0 +1,29 @@
+---
+title: Rates
+description: Rates, estimates and minimums for prices in USD and EUR.
+---
+
+Rates come from Nowgate's own rate engine: Chainlink and Pyth feeds and exchange pools on the
+networks Nowgate follows, every read checked by a second operator. An asset has a rate only when
+two independent families of sources agree, one of them an oracle. See
+[prices in a currency](/prices-and-rates).
+
+## List rates
+
+<Operation id="listRates" scope="read" />
+
+## Estimate a price
+
+<Operation id="getEstimate" scope="read" />
+
+## Get an asset's minimum
+
+<Operation id="getMinAmount" scope="read" />
+
+## The rate object
+
+<SchemaBlock name="Rate" />
+
+## The estimate object
+
+<SchemaBlock name="Estimate" />

@@ -1,0 +1,54 @@
+---
+title: Refunds
+description: Return a payment to its payer, in whole or in parts, to an address they give on a page of their own.
+---
+
+A refund sends a payment's own asset back to its payer, from your available balance. You can
+refund a finished payment, or a partially paid one once it has closed, in one go or in parts, up
+to what it credited. Nowgate keeps its payment fee, so a full refund draws the whole credited
+amount from your balance. The [API reference](/api/refunds) has every field.
+
+<SdkTabs region="refund">
+
+```bash
+curl https://api.nowgate.io/v1/payments/pay_.../refunds \
+  -H "Authorization: Bearer $NOWGATE_PAYOUTS_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{"amount":"25"}'
+```
+
+</SdkTabs>
+
+## The payer's address
+
+If you know the payer's address, send it with the refund. Otherwise the refund waits in
+`awaiting_address`, and its `refund_url` opens a page where the payer gives their address, in
+their language. Send them the link.
+
+- **The address is given once.** A wrong one needs you to cancel the refund and refund again.
+- **It waits like any new destination**: 24 hours in live, 5 minutes in the sandbox. A refund is
+  slower than a payout to an address you know; the wait is what keeps a stolen key from refunding
+  everything to its thief.
+- The page shows the payer what they will receive, when it will be sent, and then its transaction.
+
+## What the payment shows
+
+| Field             | Meaning                                         |
+| ----------------- | ----------------------------------------------- |
+| `refund_pending`  | What refunds under way will return.             |
+| `amount_refunded` | What finished refunds returned.                 |
+
+Once finished refunds reach what the payment credited, it becomes `refunded` and
+`payment.refunded` is sent. Anything the payer sends to it afterwards isn't credited to you.
+
+## Fees, statuses and events
+
+- **The network fee comes out of the refund** by default (`fee_paid_by: "payee"`); send
+  `fee_paid_by: "merchant"` to pay it yourself.
+- **A refund is a payout** of kind refund, with an `rf_` ID: the same statuses, limits and
+  approvals. It sends `refund.created`, then `refund.<status>` on every change.
+- **Cancel one** with `POST /v1/refunds/{id}/cancel` until it is signed; its hold comes back to
+  your balance and to the payment.
+- **Refused:** `not_refundable` when the payment isn't finished or closed, or its refunds already
+  hold everything it credited, and `refund_exceeds_refundable` for more than remains.

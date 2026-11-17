@@ -1,0 +1,31 @@
+---
+title: Sandbox
+description: Simulate what payers do without testnet coins, and payouts without a chain.
+---
+
+In the sandbox, every case a payer can cause is one call away: paying, paying too little or too
+much, paying again, sending the wrong asset, paying late, and running out of time. See
+[testing in the sandbox](/payments#testing-in-the-sandbox).
+
+Payouts and refunds in the sandbox are simulated too. They go through the same API, limits,
+reservations, statuses and webhooks as live ones, but no chain: a payout is `sending` at once,
+with a `sim:` transaction hash, and `finished` about 10 seconds later. Its network fee is a fixed
+notional amount. The sandbox's balance is its simulated deposits, so a balance that came from a
+real testnet deposit can't be paid out there: such a payout fails with
+`simulated_funds_insufficient`. A new destination waits 5 minutes, or activate it at once.
+
+## Simulate a payer
+
+<Operation id="simulatePayment" scope="payments" />
+
+## Fail a payout
+
+<Operation id="simulatePayout" scope="payouts" />
+
+## Activate a destination now
+
+<Operation id="activatePayoutDestination" scope="payouts" />
+
+## The simulation object
+
+<SchemaBlock name="Simulation" />

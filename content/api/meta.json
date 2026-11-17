@@ -1,0 +1,16 @@
+{
+  "title": "API reference",
+  "pages": [
+    "index",
+    "payments",
+    "payment-links",
+    "payouts",
+    "refunds",
+    "subscriptions",
+    "rates",
+    "sandbox",
+    "events",
+    "assets",
+    "status"
+  ]
+}

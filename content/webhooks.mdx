@@ -1,0 +1,141 @@
+---
+title: Webhooks
+description: Receive every payment change as a signed event, verify it, and handle retries and ordering.
+---
+
+Nowgate POSTs an event to your endpoint every time a payment, payout or refund changes. Your
+endpoint must answer with any `2xx` status to acknowledge it.
+
+## Events
+
+| Type                                                                 | When                                              |
+| -------------------------------------------------------------------- | ------------------------------------------------- |
+| `payment.created`                                                    | The payment was created.                          |
+| `payment.waiting`, `payment.confirming`, `payment.partially_paid`, `payment.finished`, `payment.expired`, `payment.failed`, `payment.refunded` | The payment's status changed. `payment.waiting` follows a reorganization. |
+| `payment.credited`                                                   | Funds were credited to your balance.              |
+| `payment.reversed`                                                   | A credit was reversed after a reorganization.     |
+| `payment.deposit_accepted`                                           | A [stuck deposit](/stuck-deposits) was accepted into your balance: the wrong coin, or coin that came after the payment failed. The payment's status doesn't change. |
+| `ping.test`                                                          | A test sent from the dashboard to this endpoint alone. Nothing happened. |
+| `payout.created`, `payout.<status>`, `refund.created`, `refund.<status>`, `destination.created`, `destination.active`, `destination.disabled`, `batch.created`, `batch.finished` | A payout, refund, destination or batch was created or changed: see [Payouts](/api/payouts) and [Refunds](/api/refunds). |
+
+Every event has the same envelope. `data.object` is the payment exactly as
+`GET /v1/payments/{id}` returns it at that moment (or the payout, refund, destination or batch):
+
+```json
+{
+  "id": "evt_01jc3x9w4qv7m2c8d5t0y6k1hr",
+  "object": "event",
+  "type": "payment.finished",
+  "api_version": "2026-11-01",
+  "environment": "live",
+  "created_at": "2026-11-05T12:00:00Z",
+  "data": { "object": { "id": "pay_01jc3x6k2tf8yq0b5n2c7m9d4v", "status": "finished", "version": 4 } }
+}
+```
+
+Requests also carry `Nowgate-Event-Id`, `Nowgate-Event-Type`, `Nowgate-Delivery-Id` and
+`Nowgate-Delivery-Attempt` headers, and `User-Agent: Nowgate-Webhooks/1`.
+
+## Verify the signature
+
+Each request is signed in the `Nowgate-Signature` header:
+
+```text
+Nowgate-Signature: t=1793880000,v1=1204f3bf41b7da3944bf68b2275b99ef419986be5adefc3c8e2668081996a50e
+```
+
+`v1` is the hex HMAC-SHA256 of `<t>.<raw body>`, keyed with your endpoint secret (`whsec_…`).
+`t` is the time of the attempt, so every retry is signed afresh. To verify:
+
+1. Use the **raw body bytes** you received. Parsing and re-serializing the JSON changes them and
+   breaks the signature.
+2. Reject a timestamp more than 5 minutes from your clock.
+3. Compute the HMAC with each secret you accept and compare it with every `v1` value in constant
+   time. Ignore other schemes, such as `v0`.
+
+### With an SDK
+
+Each SDK verifies exactly as Nowgate's own verifier does, with no client needed, and returns the
+event, told apart by its type. It takes the raw body: Express's `express.raw()`, a Next.js
+route's `await request.text()`, Flask's `request.get_data()`, Django's `request.body`, Laravel's
+`$request->getContent()`, or plain PHP's `file_get_contents('php://input')`.
+
+<SdkTabs region="verify-webhook" />
+
+A signature that doesn't verify raises the SDK's signature error, whose `reason` is `malformed`,
+`no_signature`, `timestamp` or `mismatch`. Answer it with a `4xx`, and never act on the body.
+
+### Without an SDK
+
+<Tabs items={["Node.js", "Python", "PHP"]}>
+<Tab value="Node.js">
+<Sample file="verify-webhook.ts" />
+</Tab>
+<Tab value="Python">
+<Sample file="verify_webhook.py" />
+</Tab>
+<Tab value="PHP">
+<Sample file="verify_webhook.php" />
+</Tab>
+</Tabs>
+
+These functions and the SDKs are tested against the [published signature vectors](/webhooks/signature-vectors.json),
+the same 21 cases Nowgate's own verifier passes. Run your implementation against them too.
+
+With Express, read the raw body for the webhook route only:
+
+```ts
+import express from "express";
+import { verifyNowgateSignature } from "./verify-webhook";
+
+const app = express();
+app.post("/webhooks/nowgate", express.raw({ type: "application/json" }), (req, res) => {
+  const error = verifyNowgateSignature(req.get("Nowgate-Signature") ?? "", req.body, [process.env.NOWGATE_WEBHOOK_SECRET!]);
+  if (error) return res.status(400).send(error);
+  const event = JSON.parse(req.body.toString("utf8"));
+  // Store event.id; skip it if you've seen it. Then act on event.type.
+  res.sendStatus(204);
+});
+```
+
+## Handle events safely
+
+- **Deduplicate** by the event `id`. The same event can arrive more than once.
+- **Don't rely on order.** Deliveries can arrive out of order. Keep the highest
+  `data.object.version` you've seen per payment and ignore events with a lower one.
+- **Re-check before you deliver.** Before you ship goods, fetch the payment with
+  `GET /v1/payments/{id}` and check its status.
+- **Answer quickly.** Respond `2xx` within 10 seconds and do slow work afterwards. Redirects are not
+  followed, and count as failures.
+
+## Retries
+
+A delivery that doesn't get a `2xx` is retried 15 times in all, about 30 s, 2 min, 10 min, 30 min,
+1 h, 2 h, 4 h, 6 h and 8 h apart, then every 10 h, each with ±10 % jitter: about 72 hours in total.
+
+- A `410 Gone` response stops the delivery and marks the endpoint gone.
+- An endpoint that fails continuously for 72 hours, with at least 15 failed attempts, is disabled.
+- Any event can be replayed later, from the dashboard's Developers pages, to one endpoint or all
+  of them: it is sent again with the same `id` and body, signed afresh. Those pages also list each
+  endpoint's deliveries, with every attempt's status, time and response.
+
+## Endpoints and secrets
+
+Endpoints are `https://` URLs. Nowgate checks where a URL points at every delivery, after DNS
+resolution, and refuses private and internal addresses.
+
+Each endpoint has its own secret, shown once when it is created or rotated. During a rotation, pass
+both the old and the new secret to your verifier until you've switched.
+
+## A URL per payment
+
+Pass `webhook_url` when you create a payment, and that payment's events go there instead of to your
+endpoints, for example to the system that sold that one order. The URL follows the endpoint rules,
+and every delivery passes the same check against private addresses.
+
+- Deliveries are signed with your **default endpoint's** secret, so you verify them like every other
+  delivery. Without a default endpoint, `webhook_url` is refused.
+- The default is the one when the payment was created: changing it later doesn't change how that
+  payment's events are signed.
+- The payment's events never go to your other endpoints, even if its URL fails until it is
+  disabled, and replays go to its URL too.

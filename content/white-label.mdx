@@ -1,0 +1,55 @@
+---
+title: White label
+description: Serve checkout on your own domain, and send your customers emails in your brand.
+---
+
+Your payers and subscribers can see your brand from start to finish: checkout on a name of your
+own, such as `pay.example.com`, and emails with your name, logo and colors.
+
+## Checkout on your own domain
+
+Add a name under **Settings → Domains** in the dashboard (it takes the settings' manage permission,
+and asks you to confirm it's you), then create the two DNS records it shows, at your DNS provider:
+
+| Record                         | Value                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| `pay.example.com` `CNAME`      | `domains.nowgate.io`. At a zone's apex, which can't hold a CNAME, `A` and `AAAA` records with its addresses instead |
+| `_nowgate.pay.example.com` `TXT` | `nowgate-verification=` and the token the dashboard shows                  |
+
+Nowgate checks both records, asking two public DNS resolvers run by different operators, and both
+must agree; **Check now** asks them at once, at most once a minute. Then Nowgate obtains a
+certificate for the name through ACME and serves your checkout there.
+
+| Status      | Meaning                                                                          |
+| ----------- | -------------------------------------------------------------------------------- |
+| `pending`   | Waiting for the records: checked every 5 minutes for an hour, then hourly        |
+| `verified`  | The records check out; waiting for a certificate                                 |
+| `active`    | Served, with a certificate                                                       |
+| `error`     | A certificate couldn't be obtained after its retries; try again                  |
+| `suspended` | The records were lost for three days in a row; no longer served                  |
+| `failed`    | Not verified within 7 days, or suspended for 30; try again                       |
+
+- **Choose it for checkout links** (one name at most, and it asks you to confirm it's you), and your
+  payments', links', invoices' and subscribers' pages use it: in
+  `checkout_url` and `subscriber_url`, in webhooks and in emails. If the name stops working, new
+  links fall back to Nowgate's own address, and links already sent keep working there.
+- **Only your pages** are served on your name: another merchant's link answers "not found" there.
+- **White label:** on your name, checkout shows your brand alone, without Nowgate's mark.
+- **Limits:** 3 names. A name verified by another merchant can't be added.
+- **Certificates** are renewed at two-thirds of their lifetime. Members who manage settings get an
+  email when a name becomes active, and if it's suspended or its certificate can't be renewed.
+
+## Emails in your brand
+
+Receipts and subscribers' emails carry your brand:
+
+- **Your name** as the sender's: "Lumen Coffee via Nowgate", from Nowgate's address, so the email
+  is authenticated as Nowgate sends it.
+- **Replies** go to your support email.
+- **Your logo**, attached to the email itself, so it shows even where remote images are blocked,
+  and your **accent color**, with a text color that keeps it readable.
+- **The footer** says who sent it and why.
+
+Set your display name, logo, color and support email in the dashboard's general settings.
+**Settings → Emails** shows what your emails carry and previews a receipt in each of checkout's ten
+languages; the subscriptions' settings preview every email subscribers get.

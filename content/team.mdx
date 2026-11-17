@@ -1,0 +1,106 @@
+---
+title: Your team
+description: Invite members, give each one a role or their own permissions per section, hand over ownership, and add cashiers for the point of sale.
+---
+
+A business in the dashboard has one owner and any number of members. Each member's permissions
+are set per section of the dashboard, and every change they make is recorded in the
+[activity trail](#activity).
+
+## Members
+
+A member has either or both of:
+
+- **a dashboard login:** an account of their own, with [two-step sign-in](/account-security#two-step-sign-in) if they turn it on
+- **a till PIN:** to sell on your [point of sale](/point-of-sale)
+
+A cashier who never uses the dashboard needs no email address: add them on the **Team** page with
+a name and a PIN. One person can be a member of several businesses, and switches between them on
+[Account Home](/account-security#account-home-and-your-businesses) or at the top of the dashboard's
+menu.
+
+## Sections and permissions
+
+Each member has a level per section: none, view or manage.
+
+| Section      | View                                                         | Manage adds                                                         |
+| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Payments     | Payments, their transfers and events; CSV export; stuck deposits | Accepting and returning [stuck deposits](/stuck-deposits)       |
+| Links        | Payment links                                                | Creating, changing and archiving links; logos                       |
+| Payouts      | Balances, destinations, payouts, batches, forwarding         | Destinations, payouts, batches and schedules; canceling; forwarding |
+| Refunds      | Refunds                                                      | Creating and canceling refunds                                      |
+| Developers   | API keys' details; webhook endpoints, events and deliveries  | Keys, endpoints, secrets, replays and test events                   |
+| Settings     | The business's profile, branding, coins, receipts and defaults | Changing them                                                     |
+| Team         | Members and invitations                                      | Inviting, changing, removing; cashiers and their PINs               |
+| POS          | Tills and POS reports                                        | Creating, pairing, renaming and revoking tills; POS settings        |
+| Activity     | The activity trail                                           | —                                                                   |
+
+Two permissions stand apart:
+
+- **Approve payouts** lets a member [approve payouts](/approvals). It is separate from managing
+  payouts, so whoever creates payouts needn't be whoever approves them.
+- **Sell** lets a member with a PIN sign in on your tills.
+
+## Roles
+
+A role fills in the permissions. Change any of them one by one and the member's role becomes
+`custom`.
+
+| Role      | Payments | Links  | Payouts | Refunds | Developers | Settings | Team   | POS    | Activity | Approve | Sell |
+| --------- | -------- | ------ | ------- | ------- | ---------- | -------- | ------ | ------ | -------- | ------- | ---- |
+| owner     | manage   | manage | manage  | manage  | manage     | manage   | manage | manage | view     | yes     | yes  |
+| admin     | manage   | manage | manage  | manage  | manage     | manage   | manage | manage | view     | yes     | yes  |
+| finance   | view     | view   | manage  | manage  | none       | view     | none   | view   | view     | yes     | no   |
+| developer | view     | manage | view    | none    | manage     | view     | none   | none   | view     | no      | no   |
+| support   | manage   | view   | view    | manage  | none       | none     | none   | view   | none     | no      | no   |
+| viewer    | view     | view   | view    | view    | view       | view     | view   | view   | view     | no      | no   |
+| cashier   | none     | none   | none    | none    | none       | none     | none   | none   | none     | no      | yes  |
+
+- Nobody can give permissions they don't hold themselves.
+- An admin can't change the owner's permissions.
+- A member who opens a page beyond their permissions is told so, and the dashboard's menu shows
+  only the sections they can see.
+
+## Invitations
+
+A member who manages the team invites an email address with a role. Inviting, like every change to
+a member's permissions, asks you to [confirm it's you](/account-security#sensitive-actions-ask-again).
+
+- **The link** in the invitation works once, for 7 days, and only for the address it was sent to.
+- **Accepting** takes the invitee through sign-up if the address has no account yet, or signs them
+  in if it has. Either way, their email is verified before they join.
+- **Pending invitations** are listed on the Team page, where you can revoke one. Inviting the same
+  address again replaces its pending invitation with a new link.
+- Inviting someone who is already a member is refused.
+
+## Removing a member
+
+Removing a member takes effect at once: their sessions lose access to your business, and a
+cashier's shift on a till ends. The owner can't be removed, only replaced.
+
+## Ownership
+
+Every business has exactly one owner. Only the owner can hand ownership over, to a member with a
+dashboard login, and it asks you to confirm it's you. The new owner gets the owner role, and the
+former owner becomes an admin.
+
+## Cashiers and PINs
+
+- **A PIN** is six digits. A member who manages the team sets it, confirming it's them, or the
+  cashier changes it on a till after signing in, with their current one.
+- **Any member can have one,** owners included, so whoever is at the counter can sell. Only members
+  with the sell permission appear on your tills, by name and nothing more.
+- **Guessing is throttled** on each till: see [the point of sale](/point-of-sale#cashiers-and-shifts).
+
+## Activity
+
+The **Activity** page lists everything done in your business: who did what and when, through the
+dashboard, an API key, a till or Nowgate's operators, with the client address. Filter it by member,
+action and date. Team changes, keys, endpoints, payouts, settings and exports are all there.
+
+## Notices
+
+Nowgate emails the owner and admins of each business when it **receives a payment** and when a
+**payout is sent**, and the owner when they **make a business**. Each email links to the page in
+the dashboard; a link never acts by itself, because mail scanners follow links. Everything else your
+team does is on the **Activity** page.

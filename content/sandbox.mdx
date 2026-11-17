@@ -1,0 +1,41 @@
+---
+title: Sandbox
+description: The sandbox behaves as live does, without real money, and lets you play the payer, fail a payout or skip a destination's wait.
+---
+
+The sandbox (`https://sandbox-api.nowgate.io/v1`, with an `ngk_sandbox_…` key) runs the same
+engine as live, with the same statuses, credits, webhooks, payouts and refunds, but no real
+money: simulated deposits stay in the sandbox's books and payouts are never sent. It adds
+[controls](/api/sandbox) that live doesn't have.
+
+The sandbox is a system of its own. Its accounts, keys and data are separate from live's: an
+account made at `signup.nowgate.io` doesn't sign in to the sandbox, and a sandbox account
+doesn't sign in at `signin.nowgate.io`. [Create a sandbox account](https://sandbox-app.nowgate.io/sign-up)
+to get its keys.
+
+## Play the payer
+
+<SdkTabs region="simulate-payment" />
+
+| `action` | What happens |
+| --- | --- |
+| `pay` | a deposit of exactly what is due |
+| `underpay` | a deposit short by `amount`, or by half: `partially_paid` |
+| `overpay` | a deposit over by `amount`, or by half: finished and `overpaid` |
+| `repeat` | another deposit after the payment finished |
+| `wrong_asset` | another asset of the network to the payment's address, which goes to review |
+| `late` | the payment expires now, then what was due arrives: `late` |
+| `expire` | the payment expires now |
+
+A simulated deposit is pending at first, as one in the mempool is, and settles about ten seconds
+later. From then on it is processed like any deposit:
+
+<SdkTabs region="follow-payment" />
+
+## Payouts and refunds
+
+A new payout destination waits before its first payout, as in live, unless the sandbox activates
+it at once. Payouts and refunds then run to `finished` with simulated transactions, and
+`POST /v1/sandbox/payouts/{id}/simulate` can make one fail.
+
+<SdkTabs region="payout" />

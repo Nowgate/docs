@@ -1,0 +1,45 @@
+---
+title: Payment links
+description: "Reusable checkout pages that never expire, for a product, a ticket or donations: fixed or open prices, donors' messages and your branding."
+---
+
+A [payment link](/api/payment-links) is a reusable checkout page that never expires, for a product,
+a ticket or donations. Each attempt on it is an ordinary payment with `payment_link` set and its own
+quote, and you get its events like any payment's.
+
+<SdkTabs region="payment-link" />
+
+Share the link's `checkout_url`, put it behind a [button](/embeds#buttons), or open it in
+[the overlay](/embeds#the-overlay). Anyone with the URL can pay on the link.
+
+## Prices
+
+- **Fixed in a currency:** `price_amount` and `price_currency`; the payer picks one of the link's
+  `assets`, or any pair Nowgate follows when you list none. Each attempt gets its own quote, as in
+  [Prices and rates](/prices-and-rates).
+- **Fixed in one asset:** `amount`, `network` and `asset`, as above.
+- **Open:** up to six preset amounts, and optionally an amount the payer enters between a minimum
+  and a maximum.
+
+`markup_bps`, `fee_paid_by` and `expires_in` work as on a payment, for each attempt. Each attempt's
+`order_id` can be numbered from `order_id_prefix`: `DONATE-1`, `DONATE-2` and so on.
+
+## Donations
+
+A link can let donors leave a name and a message of up to 280 characters, and give anonymously. An
+anonymous donor's name is never stored. The payment's `donor` is plain text as entered: escape it
+wherever you show it.
+
+## Branding
+
+A display name, an accent color (checkout picks a text color that meets WCAG AA on it) and a logo
+you upload as a PNG or JPEG with [`POST /v1/branding/logos`](/api/payment-links#upload-a-logo)
+(`logos.create` in the SDKs). After payment, checkout can offer a button back to your `success_url`;
+it never redirects on its own.
+
+## Changing a link
+
+<SdkTabs region="update-payment-link" />
+
+A new price applies to new attempts only. Set a link `inactive` to stop new attempts; its payments
+still complete.

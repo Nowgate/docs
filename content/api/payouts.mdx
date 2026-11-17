@@ -1,0 +1,101 @@
+---
+title: Payouts
+description: Pay your balance out to your own wallets, singly or in batches, to destinations that wait before their first use.
+---
+
+A payout pays an asset you hold to one of your **destinations**. A new destination waits before it
+can be paid: 24 hours in live, 5 minutes in the sandbox. Its amount, Nowgate's payout fee and the
+network fee, quoted in the payout's own asset, are reserved from your available balance as soon as
+the payout is created. A payout that is canceled, or that fails, returns them, and a finished
+payout returns what the network didn't take of its fee.
+
+**Forwarding** pays what arrives on by itself: a rule per asset sends each payment's credit, or
+your whole available balance once a day, to one of your destinations, the network fee coming out
+of it.
+
+Every operation that moves money, or sets up its movement, needs a key with the `payouts` scope,
+which is always bound to an IP allowlist.
+
+## List balances
+
+<Operation id="listBalances" scope="read" />
+
+## Add a payout destination
+
+<Operation id="createPayoutDestination" scope="payouts" />
+
+## Retrieve a payout destination
+
+<Operation id="getPayoutDestination" scope="read" />
+
+## List payout destinations
+
+<Operation id="listPayoutDestinations" scope="read" />
+
+## Disable a payout destination
+
+<Operation id="disablePayoutDestination" scope="payouts" />
+
+## Create a payout
+
+<Operation id="createPayout" scope="payouts" />
+
+## Retrieve a payout
+
+<Operation id="getPayout" scope="read" />
+
+## List payouts
+
+<Operation id="listPayouts" scope="read" />
+
+## Cancel a payout
+
+<Operation id="cancelPayout" scope="payouts" />
+
+## Create a batch of payouts
+
+<Operation id="createPayoutBatch" scope="payouts" />
+
+## Retrieve a payout batch
+
+<Operation id="getPayoutBatch" scope="read" />
+
+## List payout batches
+
+<Operation id="listPayoutBatches" scope="read" />
+
+## Retrieve your forwarding rules
+
+<Operation id="getForwarding" scope="read" />
+
+## Set your forwarding rules
+
+<Operation id="setForwarding" scope="payouts" />
+
+## Payout events
+
+<Operation id="payoutEvent" />
+
+## Destination events
+
+<Operation id="destinationEvent" />
+
+## Batch events
+
+<Operation id="batchEvent" />
+
+## The payout object
+
+<SchemaBlock name="Payout" />
+
+## The payout destination object
+
+<SchemaBlock name="PayoutDestination" />
+
+## The payout batch object
+
+<SchemaBlock name="PayoutBatch" />
+
+## The forwarding rule object
+
+<SchemaBlock name="ForwardingRule" />

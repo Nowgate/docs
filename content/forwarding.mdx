@@ -1,0 +1,34 @@
+---
+title: Forwarding
+description: Send what arrives on to your own wallet by itself, each payment or once a day.
+---
+
+Forwarding pays what you receive on to one of your [destinations](/payouts#destinations) without a
+call per payment. You set one rule per asset with `PUT /v1/forwarding`, and read them with
+`GET /v1/forwarding`; the [API reference](/api/payouts#set-your-forwarding-rules) has every field.
+
+<SdkTabs region="forwarding">
+
+```bash
+curl -X PUT https://api.nowgate.io/v1/forwarding \
+  -H "Authorization: Bearer $NOWGATE_PAYOUTS_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"rules":[{"network":"tron","asset":"USDT","destination":"dst_...","mode":"payment","min_amount":"20"}]}'
+```
+
+</SdkTabs>
+
+| Mode      | What it forwards                                                                                     |
+| --------- | ---------------------------------------------------------------------------------------------------- |
+| `payment` | Each payment's credit, as one payout, as soon as it reaches your available balance.                  |
+| `daily`   | Your whole available balance of the asset, once a day, at `hour` (UTC).                               |
+
+- **The destination must be active**: a new one waits first.
+- **Nothing under `min_amount`** is forwarded; it stays in your balance.
+- **Forwarding payouts are ordinary payouts**, with `source: "forwarding"`: the same statuses,
+  webhooks, limits and fees. The network fee comes out of what is forwarded
+  (`fee_paid_by: "payee"`), so your balance is left whole.
+- **They never wait for approval**: you approved the rule when you set it.
+- **Each credit is forwarded once**, and a daily rule forwards once a day.
+- **Setting the rules again** replaces them all at once; an empty list stops forwarding. A rule
+  kept for an asset keeps its first time, so it doesn't forward again what came before it.

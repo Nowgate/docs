@@ -1,0 +1,140 @@
+---
+title: Account security
+description: Sign up, verify your email, make your businesses on Account Home, and protect your account with two-step sign-in, fresh checks for sensitive actions, and sessions you control.
+---
+
+The dashboard is where you and your team manage payments, payouts, keys and settings. Every
+account signs in with an email address and a password and, once you turn it on, a second step: a
+code from your phone or a passkey. The actions that move money or open access ask you to confirm
+it's you again.
+
+## Two dashboards
+
+| Dashboard | Address                          | Accounts                                    |
+| --------- | -------------------------------- | ------------------------------------------- |
+| Live      | `https://account.nowgate.io`     | Live accounts, live keys and payments       |
+| Sandbox   | `https://sandbox-app.nowgate.io` | Sandbox accounts, sandbox keys and payments |
+
+Each [environment](/#environments) has its own dashboard and its own accounts: nothing about a
+sandbox account, session or key can reach live. Sign up in each one you use. The sandbox shows a
+"Sandbox" banner on every page.
+
+## Signing up
+
+Sign up with your name, your email address and a password. Open the link in the email Nowgate
+sends to verify your address: the link works for 24 hours, and you can't sign in until the address
+is verified. The page you signed up on goes on by itself once the link is opened, here or on your
+phone.
+
+**Joining someone else's business?** Ask its owner for an [invitation](/team#invitations).
+
+## Account Home and your businesses
+
+Signing in takes you to **Account Home**: every business you belong to, with its logo, its name and
+your role in it. Open one to work on it. The business switcher at the top of the sidebar moves to
+another business, or back to Account Home.
+
+- **Make a business** on Account Home: give it a name and, if you like, a logo (a PNG or JPEG,
+  which the dashboard fits into a square). You're its owner. Its name and logo show at the top of
+  its dashboard, on its checkout pages and in its emails, and you can change both in its settings.
+- **Each business is its own:** its payments, balances, payment links, API keys, webhooks, team and
+  settings. An account can own up to 25 businesses.
+- **A new business is active at once,** in live as in the sandbox.
+
+The first time you sign in, a short guided tour shows you around Account Home and your first
+business. Skip it whenever you like; it doesn't come back.
+
+## Passwords
+
+- **At least 12 characters,** and at most 128. A long phrase is easiest to remember. There are no
+  rules about digits or symbols, and passwords never expire.
+- **Refused:** the 10,000 most common passwords of that length, a single repeated character, and
+  your email address or its first part. The refusal says why.
+- **Stored** as an argon2id hash: Nowgate never keeps your password itself.
+- **Changing it** needs your current password, and asks you to
+  [confirm it's you](#sensitive-actions-ask-again). It signs out your other sessions.
+- **Forgot it?** Ask for a reset link on the sign-in page. It works once, for an hour, and setting a
+  new password signs out every session. If you've turned on two-step sign-in, your next sign-in
+  still asks for it: a reset never skips it.
+
+## Two-step sign-in
+
+Two-step sign-in is optional, and recommended: with it on, a stolen password alone can't reach
+your account or your money. Turn it on from the **Account** page. You can hold several factors at
+once, and should, so that losing a phone doesn't lock you out.
+
+| Factor                     | What it is                                                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Authenticator app (TOTP)   | A six-digit code that changes every 30 seconds. Scan the QR code, then type a first code to confirm it. Each code works once. |
+| Passkeys and security keys | Your device or key confirms it's you, with a fingerprint, face or PIN. Add as many as you like, and name each one.             |
+| Recovery codes             | Ten codes of 16 characters, shown once with your first factor. Each works once, in place of a code. Save them somewhere safe.  |
+
+Codes are typed one digit per box, and a whole code goes at once: paste it, or let your phone fill
+it in. On the **Account** page you can add and remove factors, regenerate your recovery codes, and
+change your password. Removing your last factor turns two-step sign-in off, and your recovery codes
+with it.
+
+**[Approving payouts](/approvals#approving)** always needs a factor of your own: an approver turns
+two-step sign-in on first.
+
+**Lost every factor?** Contact Nowgate support. Once they have confirmed it's you, they reset your
+factors, and you sign in with your password.
+
+## Sensitive actions ask again
+
+Some actions need you to have confirmed it's you in the last 5 minutes: with a code or your
+passkey, or, without two-step sign-in, with your password. When your last confirmation is older,
+the dashboard asks, then carries on:
+
+- changing your password, adding or removing a factor, regenerating recovery codes
+- creating an API key; adding or changing a webhook endpoint, or rotating its secret
+- adding a payout destination; creating a payout or a batch; setting up forwarding; creating a
+  refund; returning a stuck deposit
+- turning payout approvals off
+- inviting a member, changing a member's permissions, removing a member, transferring ownership,
+  setting a cashier's PIN
+- creating a till, or giving it a new pairing code
+
+**Approving payouts** always needs its own check, never a recent one. See
+[approvals](/approvals#approving).
+
+## Sessions
+
+- **A session** ends after 7 days without activity, and after 30 days in any case. The dashboard
+  then returns you to the sign-in page, and back to where you were.
+- **The Account page** lists your active sessions with their browser, address and last activity.
+  Sign out any of them, or every one but this.
+- **Sessions live in a cookie** bound to the dashboard's own address, sent only with the dashboard's
+  own requests, and unreadable to scripts. Every change also carries a token the page holds, so
+  another site can't act in your name.
+- **Removed from a team,** a member loses access to that business at once, on every session.
+
+## Throttles and locks
+
+Nowgate never says whether an address has an account: a wrong password and an unknown address get
+the same answer. Repeated failures slow down whoever is guessing:
+
+| What                             | Limit                                          | What happens                                                                                        |
+| -------------------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Wrong passwords for one account  | 10 in 15 minutes                               | Password sign-in to that account is locked for 15 minutes, doubling with each lock up to 24 hours. A password reset ends the lock. |
+| Wrong codes in one sign-in       | 5                                              | The sign-in starts again.                                                                           |
+| Wrong codes for one account      | 10 in an hour                                  | The second step, and confirming it's you, are paused for an hour.                                   |
+| Failed sign-ins from one address | 30 an hour                                     | That address waits (`429`).                                                                         |
+| Sign-ups from one address        | 10 an hour                                     | That address waits (`429`).                                                                         |
+| Reset links asked for            | 10 an hour per address, 3 an hour per account  | Beyond either, no email is sent. The page says the same either way.                                 |
+
+A lock is never announced on the sign-in page. If you can't sign in with the right password, wait,
+or reset your password.
+
+## What you get by email
+
+Nowgate emails only what you need:
+
+- **Signing up:** a welcome, with the link that verifies your address. If someone signs up with an
+  address that already has an account, its holder gets a note instead.
+- **A password reset** link, when you ask for one, and **an invitation** to join a team.
+- **A business made:** when you make a business.
+- **A payment received** and **a payout sent:** to each business's owner and admins.
+
+Links in these emails carry their token after a `#`, which browsers never send to servers, so it
+stays out of every log.

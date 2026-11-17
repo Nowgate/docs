@@ -1,0 +1,86 @@
+---
+title: Subscriptions
+description: Plans, subscriptions and their invoices, each period paid on-chain as an ordinary payment.
+---
+
+A plan is what a subscription costs and how often. A subscription bills one email address on a
+plan, with an invoice each period; each invoice is paid by ordinary [payments](/api/payments)
+that carry its `invoice` and `subscription`. Nothing is charged automatically: Nowgate emails the
+subscriber their invoices, reminders and notices, and moves the subscription through `past_due`,
+`unpaid` and, at the end of dunning, `canceled`.
+
+## Create a plan
+
+<Operation id="createPlan" scope="payments" />
+
+## Retrieve a plan
+
+<Operation id="getPlan" scope="read" />
+
+## List plans
+
+<Operation id="listPlans" scope="read" />
+
+## Update a plan
+
+<Operation id="updatePlan" scope="payments" />
+
+## Create a subscription
+
+<Operation id="createSubscription" scope="payments" />
+
+## Retrieve a subscription
+
+<Operation id="getSubscription" scope="read" />
+
+## List subscriptions
+
+<Operation id="listSubscriptions" scope="read" />
+
+## Update a subscription
+
+<Operation id="updateSubscription" scope="payments" />
+
+## Cancel a subscription at once
+
+<Operation id="cancelSubscription" scope="payments" />
+
+## Replace the subscriber's link
+
+<Operation id="rotateSubscriptionLink" scope="payments" />
+
+## Retrieve an invoice
+
+<Operation id="getInvoice" scope="read" />
+
+## List invoices
+
+<Operation id="listInvoices" scope="read" />
+
+## Move a subscription's time (sandbox)
+
+<Operation id="simulateSubscription" scope="payments" />
+
+## Pay an invoice (sandbox)
+
+<Operation id="simulateInvoice" scope="payments" />
+
+## Subscription event
+
+<Operation id="subscriptionEvent" />
+
+## Invoice event
+
+<Operation id="invoiceEvent" />
+
+## The plan object
+
+<SchemaBlock name="Plan" />
+
+## The subscription object
+
+<SchemaBlock name="Subscription" />
+
+## The invoice object
+
+<SchemaBlock name="Invoice" />

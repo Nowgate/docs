@@ -1,0 +1,130 @@
+---
+title: Payments
+description: How a payment moves from waiting to finished, and what happens when customers pay too little, too much or too late.
+---
+
+A payment is one request to be paid: a network, an asset, an amount and a deposit address that
+belongs to this payment alone. Create one per order, with your order's ID as its idempotency key:
+
+<SdkTabs region="create-payment" />
+
+## Statuses
+
+| Status           | Meaning                                                                                             |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| `waiting`        | Created; nothing seen on-chain yet.                                                                 |
+| `confirming`     | A deposit is on-chain but not final yet. If a reorganization drops it, the payment returns to `waiting`. |
+| `partially_paid` | Less than the amount has been confirmed. The customer can top up until the payment expires.         |
+| `finished`       | The amount is confirmed and your balance is credited. Overpayments are credited in full and flagged. |
+| `expired`        | Nothing arrived before the payment expired.                                                         |
+| `failed`         | It can't be settled automatically, for example because only the wrong asset arrived. Nowgate reviews it. |
+| `refunded`       | [Refunds](/api/refunds) returned everything it credited to the payer.                               |
+
+Nowgate recomputes the status from what is on-chain every time something changes, so it never
+drifts from the facts. Each change sends a [webhook](/webhooks).
+
+## Amounts
+
+Amounts are decimal strings in the asset's own units: `"49.90"` USDT, `"0.0015"` BTC. They are never
+JSON numbers, and amounts with more decimal places than the asset has are rejected, not rounded.
+Nowgate returns amounts in canonical form, so `"49.90"` comes back as `"49.9"`.
+
+Every asset has a minimum payment so network fees can't eat it. The [network list](https://nowgate.io/networks)
+and `GET /v1/assets` show each one.
+
+| Field             | Meaning                                                    |
+| ----------------- | ---------------------------------------------------------- |
+| `amount`          | What you asked for.                                        |
+| `amount_pending`  | Seen on-chain, not final yet.                              |
+| `amount_received` | Confirmed so far.                                          |
+| `amount_credited` | Credited to your balance, before fees.                     |
+| `amount_refunded` | Returned to the payer by finished refunds.                 |
+| `refund_pending`  | What refunds under way will return.                        |
+| `fee`             | Nowgate's fee on the credited amount.                      |
+| `network_fee`     | Network costs, taken once from the credit.                 |
+
+## Prices in a currency
+
+Give `price_amount` and `price_currency` (`USD` or `EUR`) instead of `amount`, and Nowgate converts
+the price at its newest rate when it creates the payment, with `quote` showing the rate. How long
+the amount holds, markups, who pays the fee, and the rates, estimates and minimums behind it are in
+[Prices and rates](/prices-and-rates).
+
+## Payment links
+
+A payment link is a reusable checkout page that never expires, for a product, a ticket or
+donations; each attempt on it is an ordinary payment with `payment_link` set. See
+[Payment links](/payment-links).
+
+## Expiry
+
+A payment expires after `expires_in` seconds (900 to 86,400; your account's default, usually an
+hour, if you leave it out). A deposit counts as on time if Nowgate saw it before `expires_at`;
+block timestamps are never used, because miners control them. A payment whose on-time deposit is
+still confirming at expiry waits for it.
+
+## Underpayments
+
+If the customer sends less than the amount, the payment becomes `partially_paid` and they can top
+up until it expires. At expiry, whatever arrived is credited and the payment stays
+`partially_paid`. Decide yourself whether to deliver, refund or ask for the rest.
+
+## Overpayments
+
+If more arrives than the amount, the payment finishes, the whole amount received is credited, and
+`overpaid` is `true`.
+
+## Late payments
+
+Funds that arrive after a payment expired are still yours: the payment reopens, the funds are
+credited, and `late` becomes `true`. Nowgate never ignores customer funds.
+
+## Confirmations and reorganizations
+
+Nowgate credits a deposit only when its network's rule says it is final. Bitcoin waits for more
+confirmations as amounts grow. Base credits at its safe head, once the block's data is posted to
+Ethereum, and the other networks wait for their finalized block. The tier comes from the larger
+of the deposit and the payment amount, so splitting a payment into small transfers can't lower
+it.
+
+If a reorganization drops a deposit that was already credited, the credit is reversed, `reversed`
+becomes `true`, and you get a `payment.reversed` event.
+
+## Testing in the sandbox
+
+The sandbox (`sandbox-api.nowgate.io`) behaves as live does, with one addition: you can make up
+what a payer does, with [`POST /v1/sandbox/payments/{id}/simulate`](/api/sandbox), and test every
+case without testnet coins.
+
+| `action` | What happens |
+| --- | --- |
+| `pay` | a deposit of exactly what is due |
+| `underpay` | a deposit short by `amount`, or by half: `partially_paid` |
+| `overpay` | a deposit over by `amount`, or by half: finished and `overpaid` |
+| `repeat` | another deposit after the payment finished |
+| `wrong_asset` | another asset of the network to the payment's address, which goes to review |
+| `late` | the payment expires now, then what was due arrives: `late` |
+| `expire` | the payment expires now |
+
+A simulated deposit is pending at first, as one in the mempool is, and settles about ten seconds
+later. From then on it is processed like any deposit, with the same statuses, credits and
+webhooks. Simulated money stays in the sandbox's books and is never swept. In live the route
+doesn't exist. See [the sandbox](/sandbox) for payouts and refunds there too.
+
+## Retries and idempotency
+
+Every `POST` needs an `Idempotency-Key` header. Sending the same request with the same key returns
+the original response, with `Idempotent-Replayed: true`, instead of creating a second payment. The
+same key with a different request is refused with
+[`idempotency_key_reused`](/errors/idempotency_key_reused). Failed requests are not stored, so you
+can retry them with the same key. See [Idempotency and retries](/idempotency) for what the SDKs
+retry, and when.
+
+## Listing payments
+
+<SdkTabs region="list" />
+
+`GET /v1/payments` returns payments newest first, 20 per page by default and up to 100. Filter by
+`status` or `order_id`, and page with `starting_after` (older) or `ending_before` (newer) set to a
+payment ID from the previous page. `has_more` says whether there is another page. See
+[Pagination](/pagination).

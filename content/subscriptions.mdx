@@ -1,0 +1,137 @@
+---
+title: Subscriptions
+description: Charge on a schedule. Each period is an invoice your subscriber pays on-chain, with reminders, a grace period and dunning.
+---
+
+A subscription bills one subscriber on one plan, every period. Nothing is charged automatically:
+Nowgate holds no subscriber's funds. Each period it issues an **invoice**, emails it, and your
+subscriber pays it on-chain like any payment, in the coin they choose. Reminders, a grace period
+and dunning take the place of retried card charges. The [API reference](/api/subscriptions) has
+every field.
+
+```bash
+curl https://api.nowgate.io/v1/plans \
+  -H "Authorization: Bearer $NOWGATE_PAYMENTS_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Coffee club","price_amount":"18","price_currency":"USD","interval":"month","trial_days":14}'
+
+curl https://api.nowgate.io/v1/subscriptions \
+  -H "Authorization: Bearer $NOWGATE_PAYMENTS_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{"plan":"plan_...","subscriber":{"email":"ana@example.com","locale":"es"}}'
+```
+
+## Plans
+
+A plan is a price and how often it's paid: `day`, `week`, `month` or `year`, times
+`interval_count`, from a day up to a year.
+
+- **A price in a currency** (`price_amount` and `price_currency`, USD or EUR) is paid in any coin
+  you accept, at the rate when the subscriber pays, as a payment priced in a currency is. Limit the
+  coins with `assets`.
+- **A price in a coin** (`amount`, `network` and `asset`) is paid in that coin only.
+- **`trial_days`** gives new subscriptions a free trial, 0 to 365 days.
+- **The price and the period never change.** A new price is a new plan: move subscriptions to it
+  with a plan change. You can change a plan's name, description, trial, coins, markup and fee mode,
+  and archive it: an archived plan takes no new subscriptions, and its subscriptions carry on.
+
+## Subscriptions and their statuses
+
+| Status       | Meaning                                                                         | Give access? |
+| ------------ | ------------------------------------------------------------------------------- | ------------ |
+| `trialing`   | In its free trial. The first invoice is due when it ends.                       | Yes          |
+| `incomplete` | Made without a trial: its first invoice is due at once.                         | No           |
+| `active`     | The current period is paid.                                                     | Yes          |
+| `past_due`   | The period's invoice is unpaid past its due date, within the grace period.      | Yes          |
+| `unpaid`     | The grace period is over. The invoice can still be paid until dunning ends.     | No           |
+| `canceled`   | Ended, with `cancel_reason`: `merchant`, `subscriber`, `unpaid` or `incomplete`. | No           |
+
+Access is your call: Nowgate tells you the status, and the column above is what we suggest.
+
+- **`subscriber_url`** opens the subscriber's own page: their plan and its status, the invoice to
+  pay, past invoices with their transactions, cancellation at the end of the period and the
+  language of their emails. It's a link, not an account: replace it with
+  `POST /v1/subscriptions/{id}/rotate-link` if it went astray.
+- **`external_id`** is your own reference, unique among your subscriptions; find a subscription by
+  it, or by the subscriber's `email`.
+- **At most 1,000 new subscriptions a day**, so a leaked key can't make Nowgate email thousands of
+  addresses: more is refused with `429 subscription_limit` and `Retry-After`.
+
+## Invoices
+
+One invoice at a time: a subscriber who falls behind owes one period, never several.
+
+- **Issued** 7 days before it's due, or a quarter of the period before for periods under 28 days,
+  and **due** when its period starts. A subscription without a trial gets its first invoice at once.
+- **Paid by payments.** The invoice's `checkout_url` lets the subscriber pick a coin; each attempt is
+  an ordinary payment for what remains, with `invoice` and `subscription` set. A partial payment
+  counts, and the next attempt asks only for the rest. More than due marks it `overpaid`.
+- **Statuses:** `open`, `paid` or `void` (`void_reason`: `canceled`, `unpaid` or `replaced`). An
+  invoice's payments send no receipt: the subscriber gets the invoice's own paid email.
+
+## Reminders, grace and dunning
+
+| When                         | The subscription   | Email to the subscriber                  |
+| ---------------------------- | ------------------ | ---------------------------------------- |
+| The invoice is issued        |                    | The invoice, with its pay link           |
+| 3 days and 1 day before due  |                    | A reminder                               |
+| The due date, unpaid         | `past_due`         | Overdue                                  |
+| Grace ends (3 days), unpaid  | `unpaid`           | Paused: paying starts it again           |
+| 3 days before dunning ends   |                    | Final notice                             |
+| Dunning ends (14 days)       | `canceled`         | Canceled, and the invoice is void        |
+
+**Paying at any point before cancellation recovers the subscription.** Within the grace period the
+period keeps its dates; after it, a new period starts at the payment. Change the grace period,
+dunning and reminders in the dashboard's subscription settings; invoices issued after a change take
+it.
+
+## Emails
+
+Nowgate emails subscribers in your brand: your name ("Lumen Coffee via Nowgate"), logo and color,
+with replies to your support address, in the subscriber's `locale`, one of checkout's ten
+languages ([White label](/white-label#emails-in-your-brand) has the details). The dashboard's
+subscription settings preview each email in each language. Send `"emails": false` to send your own
+from the webhooks instead.
+
+## Cancellation and plan changes
+
+- **You cancel** at once with `POST /v1/subscriptions/{id}/cancel`, which voids its open invoice, or
+  at the end of the period with `PATCH` and `"cancel_at_period_end": true`. Nothing is refunded
+  automatically: [refund a payment](/refunds) if you need to.
+- **The subscriber cancels** from their page, at the end of the period, and can undo it until then.
+- **With nothing paid for the current period** (`incomplete`, `past_due` or `unpaid`), a
+  cancellation at the end of the period takes effect at once.
+- **A plan change** (`PATCH` with `plan`) applies from the next period, with no proration.
+
+## Webhooks
+
+| Event                                                                                      | When                                                   |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `subscription.created`                                                                     | Made, `trialing` or `incomplete`                       |
+| `subscription.active`, `.past_due`, `.unpaid`, `.canceled`                                 | Each change to that status                             |
+| `subscription.renewed`                                                                     | A new period began, paid for                           |
+| `subscription.updated`                                                                     | The plan, cancellation at period end, subscriber or emails changed |
+| `invoice.created`, `invoice.paid`, `invoice.void`, `invoice.reopened`                      | An invoice's changes                                   |
+
+`data.object` is the object as `GET` shows it. Subscribe your endpoints to them by name. An
+invoice's payments send their usual payment events, with `subscription` and `invoice`.
+
+## In the dashboard
+
+The dashboard's **Subscriptions** section lists your subscriptions, plans and invoices, with each
+subscription's history, and its settings set the grace period, dunning and reminders. Members see it
+with the team's `subscriptions` permission: to view, or to manage plans and subscriptions.
+
+## In the sandbox
+
+Walk a subscription through a year in a few calls:
+
+- `POST /v1/sandbox/subscriptions/{id}/simulate` with `{"action":"advance","to":"next"}` moves its
+  timeline so the next moment on its schedule is now (`invoice`, `due`, `grace_end`, `dunning_end`
+  or `period_end` name one), and runs it.
+- `POST /v1/sandbox/invoices/{id}/simulate` with `{"action":"pay"}` pays an invoice's remaining
+  amount through a simulated deposit.
+
+Live refuses both.

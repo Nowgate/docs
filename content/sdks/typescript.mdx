@@ -1,0 +1,71 @@
+---
+title: TypeScript
+description: Install and use Nowgate's TypeScript SDK, for Node.js 22 and later, Deno, Bun and edge workers.
+---
+
+```bash
+npm install nowgate
+```
+
+The SDK has no dependencies: it uses `fetch` and Web Crypto, so it runs on Node.js 22 and later,
+Deno, Bun and edge workers. Its types come from the API's spec. It runs on servers only: an API
+key must never reach a browser, so it refuses to start where a `document` exists.
+
+## Configure
+
+<Sample sdk="typescript" region="client" />
+
+| Option | Default | What |
+|---|---|---|
+| `apiKey` | (needed) | Your API key. Its environment picks the API. |
+| `baseUrl` | from the key | Another API, such as a local engine. |
+| `timeout` | `60000` | Milliseconds each attempt may take. |
+| `maxRetries` | `2` | How many times a failed attempt is retried. |
+| `fetch` | the global `fetch` | Your own HTTP client, with `fetch`'s shape. |
+| `appInfo` | none | Your application, added to the `User-Agent`: `my-shop/1.2`. |
+
+Every method takes a last options argument: `{ idempotencyKey, timeout, maxRetries, signal }`.
+
+## Calls
+
+<Sample sdk="typescript" region="create-payment" />
+
+A call's promise resolves to the data. Its `withResponse()` resolves to the data with the
+status, the headers, the request's ID and the idempotency facts:
+
+<Sample sdk="typescript" region="idempotent-retry" />
+
+<SdkMethods sdk="typescript" />
+
+## Errors
+
+<Sample sdk="typescript" region="invalid-request" />
+
+The errors are `NowgateError`, `ApiError` and its classes by status (`AuthenticationError`,
+`PermissionError`, `NotFoundError`, `ConflictError`, `InvalidRequestError`, `RateLimitError`,
+`ServerError`), `ConnectionError` when there's no answer, and `SignatureVerificationError`. A
+number where an amount goes is a `TypeError`, before anything is sent. See [Errors](/errors).
+
+## Pages
+
+<Sample sdk="typescript" region="list-all" />
+
+## Amounts
+
+Amounts are strings. `Amounts.toUnits`, `Amounts.fromUnits` and `Amounts.compare` convert and
+compare them exactly, with `bigint` units. See [Amounts](/amounts).
+
+## Webhooks
+
+<Sample sdk="typescript" region="verify-webhook" />
+
+`Webhooks.verifySignature` and `Webhooks.constructEvent` take the raw body as a string or bytes:
+in Express, `express.raw({ type: "application/json" })`; in a Next.js route, `await request.text()`.
+See [Webhooks](/webhooks).
+
+## Your own HTTP client
+
+Pass a function with `fetch`'s shape as `fetch`. When there's no answer, it rejects, as `fetch`
+does, and the client retries:
+
+<Sample sdk="typescript" region="transport" />

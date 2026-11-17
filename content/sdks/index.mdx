@@ -1,0 +1,48 @@
+---
+title: SDKs
+description: "Nowgate's SDKs for TypeScript, Python and PHP: one shape in three languages, with safe retries, pages, exact amounts and webhook verification."
+---
+
+Nowgate has SDKs for TypeScript, Python and PHP. Each covers the whole merchant API, has no
+runtime dependencies, and is generated from the same spec as this reference, so a new operation
+reaches all three at once.
+
+<Cards>
+<Card title="TypeScript" href="/sdks/typescript">npm `nowgate`, for Node.js 22 and later, Deno, Bun and edge workers.</Card>
+<Card title="Python" href="/sdks/python">PyPI `nowgate`, for Python 3.10 and later, on the standard library alone.</Card>
+<Card title="PHP" href="/sdks/php">Packagist `nowgate/nowgate`, for PHP 8.1 and later, with `ext-curl`.</Card>
+</Cards>
+
+## What every SDK does
+
+- **Your key, and the right API.** A live key (`ngk_live_…`) talks to `https://api.nowgate.io/v1`
+  and a sandbox key (`ngk_sandbox_…`) to `https://sandbox-api.nowgate.io/v1`, so a key can't reach
+  the wrong environment by mistake. The key is never shown in errors, logs or debug output.
+- **Safe retries.** Every POST carries an idempotency key, yours or one the SDK makes, and every
+  attempt of a call sends the same one. The SDKs retry a request that got no answer, a `429`, a
+  `5xx`, and `409 idempotency_key_in_progress`, at most twice by default. See
+  [Idempotency and retries](/idempotency).
+- **Pages.** `list` returns one page as the API sends it; `listAll` (`list_all` in Python) walks
+  every page for you. See [Pagination](/pagination).
+- **Problems as exceptions.** Every error is an exception of its status's class, with the API's
+  code, its field pointers and the request's ID. See [Errors](/errors).
+- **Exact amounts.** Amounts are decimal strings, never floats, and helpers convert them to and
+  from an asset's smallest units. See [Amounts](/amounts).
+- **Webhooks.** A verifier gives exactly the engine's answer on every published test vector. See
+  [Webhooks](/webhooks).
+- **The API's own JSON.** Results are the API's fields, typed but not wrapped, so every field
+  table in this reference applies to every SDK, and a field the API adds later simply appears.
+
+## One shape in three languages
+
+| | TypeScript | Python | PHP |
+|---|---|---|---|
+| Client | `new Nowgate({ apiKey })` | `Nowgate(api_key=...)` | `new Client(['api_key' => ...])` |
+| A call | `nowgate.payments.create({ ... })` | `client.payments.create(...)` | `$nowgate->payments->create([...])` |
+| Path IDs | `nowgate.refunds.create("pay_…", { amount })` | `client.refunds.create("pay_…", amount=...)` | `$nowgate->refunds->create('pay_…', [...])` |
+| Per call | a last `{ idempotencyKey, timeout, maxRetries }` | `idempotency_key=`, `timeout=`, `max_retries=` | a last `['idempotency_key' => ..., ...]` |
+| The response too | `.withResponse()` on the call | `client.with_response.payments.create(...)` | `$nowgate->withResponse()->payments->create(...)` |
+
+Every sample in these pages ran against a real Nowgate engine in our last check: they are cut
+from the SDKs' contract programs, which make payments, follow them to `finished`, verify their
+webhooks, walk pages, retry, and make payouts and refunds in the sandbox.

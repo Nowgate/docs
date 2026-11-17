@@ -1,0 +1,47 @@
+---
+title: API reference
+description: Base URLs, authentication and the conventions every operation follows.
+---
+
+The reference is generated from [the API's OpenAPI 3.1 contract](/openapi.yaml), so it always
+matches what the API does.
+
+## Base URLs
+
+| Environment | Base URL                            |
+| ----------- | ----------------------------------- |
+| Live        | `https://api.nowgate.io/v1`         |
+| Sandbox     | `https://sandbox-api.nowgate.io/v1` |
+
+## Authentication
+
+Send your API key as a bearer token:
+
+```http
+Authorization: Bearer ngk_live_…
+```
+
+Keys belong to one environment: `ngk_live_…` keys work only on the live API, `ngk_sandbox_…` keys
+only on the sandbox. Each key carries scopes, and each operation in this reference names the one
+it needs:
+
+| Scope      | Allows                                                                                                   |
+| ---------- | -------------------------------------------------------------------------------------------------------- |
+| `read`     | Reading everything.                                                                                      |
+| `payments` | Creating payments and payment links, and everything `read` allows.                                       |
+| `payouts`  | Payout destinations, payouts, refunds and forwarding, and everything `read` allows. Such keys require an IP allowlist. |
+
+`GET /v1/status` and `GET /v1/assets` need no key. See [API keys](/api-keys).
+
+## Conventions
+
+- Every `POST` requires an `Idempotency-Key` header: 1 to 255 visible ASCII characters, such as a
+  UUID. See [Idempotency and retries](/idempotency).
+- Bodies are JSON (`Content-Type: application/json`, UTF-8, at most 64 KiB). Unknown fields are
+  rejected.
+- Amounts are decimal strings in the asset's units, never numbers: see [Amounts](/amounts).
+- IDs are prefixed by type: `pay_…` for payments, `evt_…` for events.
+- Lists are newest first and paginate with `starting_after` and `ending_before`: see
+  [Pagination](/pagination).
+- Errors are [problem details](/errors) with a stable `code`.
+- The API version is `2026-11-01`; every webhook event names the version its body follows.

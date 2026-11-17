@@ -1,0 +1,76 @@
+---
+title: Python
+description: Install and use Nowgate's Python SDK, for Python 3.10 and later, on the standard library alone.
+---
+
+```bash
+pip install nowgate
+```
+
+The SDK needs Python 3.10 or later and nothing outside the standard library. It is fully typed
+(`py.typed`): every result is a `TypedDict`, checked by mypy and your editor.
+
+## Configure
+
+<Sample sdk="python" region="client" />
+
+| Option | Default | What |
+|---|---|---|
+| `api_key` | (needed) | Your API key. Its environment picks the API. |
+| `base_url` | from the key | Another API, such as a local engine. |
+| `timeout` | `60.0` | Seconds each attempt may wait for the network. |
+| `max_retries` | `2` | How many times a failed attempt is retried. |
+| `transport` | urllib | Your own HTTP client: see below. |
+| `app_info` | none | Your application, added to the `User-Agent`: `my-shop/1.2`. |
+
+Every method also takes `timeout=` and `max_retries=`, and every POST `idempotency_key=`.
+
+## Calls
+
+Body fields and query parameters are keyword arguments with the API's own names, so a misspelt
+field fails at the call. Path IDs come first.
+
+<Sample sdk="python" region="create-payment" />
+
+To read the status, the headers and the request's ID too, make the same call through
+`client.with_response`:
+
+<Sample sdk="python" region="idempotent-retry" />
+
+<SdkMethods sdk="python" />
+
+## Errors
+
+<Sample sdk="python" region="invalid-request" />
+
+The exceptions are `NowgateError`, `ApiError` and its classes by status
+(`AuthenticationError`, `PermissionDeniedError`, `NotFoundError`, `ConflictError`,
+`InvalidRequestError`, `RateLimitError`, `ServerError`), `APIConnectionError` when there's no
+answer, and `SignatureVerificationError`. See [Errors](/errors).
+
+## Pages
+
+<Sample sdk="python" region="list-all" />
+
+`list_all` is a generator: it fetches nothing until you iterate, and stops when you do.
+
+## Amounts
+
+Amount fields take a decimal string, an `int` or a finite `decimal.Decimal`. A `float` is
+refused with a `TypeError` before anything is sent. `Amounts.to_units`, `Amounts.from_units` and
+`Amounts.compare` convert and compare amounts exactly. See [Amounts](/amounts).
+
+## Webhooks
+
+<Sample sdk="python" region="verify-webhook" />
+
+`Webhook.verify_signature` and `Webhook.construct_event` take the raw body as `bytes` or `str`:
+in Flask, `request.get_data()`; in Django, `request.body`. See [Webhooks](/webhooks).
+
+## Your own HTTP client
+
+A transport is a function from a `nowgate.Request` to a `nowgate.Response`. When there's no
+answer, it raises an `OSError` (such as `ConnectionError` or `TimeoutError`), which the client
+retries:
+
+<Sample sdk="python" region="transport" />

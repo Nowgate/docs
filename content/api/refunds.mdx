@@ -1,0 +1,48 @@
+---
+title: Refunds
+description: Return a payment to its payer, in whole or in parts, in its own asset, to an address they give.
+---
+
+A refund pays a payment's own asset back to its payer, from your available balance. You can refund
+a finished payment, or a partially paid one once it has closed, in one go or in parts, up to what it
+credited (`amount_credited`). Nowgate keeps its payment fee, so a full refund draws the whole
+credited amount from your balance. Like a [payout](/api/payouts), a refund is reserved as soon as it
+is created, and a refund that is canceled, or that fails, returns it.
+
+The network fee comes out of the refund by default (`fee_paid_by: "payee"`). Send
+`fee_paid_by: "merchant"` to pay it yourself.
+
+If you know the payer's address, send it with the refund. Otherwise the refund waits in
+`awaiting_address`, and its `refund_url` opens a page where the payer gives their address, once.
+Either way the address becomes one of your destinations and waits like any new one before it is
+paid: 24 hours in live, 5 minutes in the sandbox.
+
+The payment keeps account of its refunds: `refund_pending` is what refunds under way will return,
+and `amount_refunded` what finished ones did. Once that reaches `amount_credited`, the payment is
+`refunded` and `payment.refunded` is sent.
+
+Creating and canceling refunds needs a key with the `payouts` scope.
+
+## Refund a payment
+
+<Operation id="createRefund" scope="payouts" />
+
+## Retrieve a refund
+
+<Operation id="getRefund" scope="read" />
+
+## List refunds
+
+<Operation id="listRefunds" scope="read" />
+
+## Cancel a refund
+
+<Operation id="cancelRefund" scope="payouts" />
+
+## Refund events
+
+<Operation id="refundEvent" />
+
+## The refund object
+
+<SchemaBlock name="Refund" />

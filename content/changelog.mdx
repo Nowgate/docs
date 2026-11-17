@@ -1,0 +1,25 @@
+---
+title: Changelog
+description: "The API's versions and every change under them, and the SDKs' releases."
+---
+
+An API version is a date, and `2026-11-01` is the only one. Every event names the version its body
+follows, in `api_version`.
+
+- **A new version comes only with a breaking change:** removing or renaming an operation, a field or
+  an event type, a new required field, changing a field's type or meaning, or refusing a request
+  that was valid. `/v1` never breaks in place.
+- **Compatible changes land in place,** dated below under the version they extend: new operations,
+  new optional fields in requests, new fields in responses, new event types, new values of an enum,
+  new error codes, and new networks and assets. Accept what you don't know, as the SDKs do.
+
+## API versions
+
+<ApiChangelog />
+
+## The SDKs
+
+Each SDK follows semantic versioning, names the API version it was made for, and keeps its own
+changelog beside its code.
+
+<SdkChangelog />

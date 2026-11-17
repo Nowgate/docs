@@ -1,0 +1,134 @@
+---
+title: Payouts
+description: Pay your balance out to your own wallets, singly, in batches or on a schedule, with destinations that wait, limits and approvals.
+---
+
+What your customers pay stays in your balance, per asset, until you pay it out to a wallet of
+yours. A payout sends an asset you hold, on its own network: Nowgate never converts one asset into
+another. The [API reference](/api/payouts) lists every field.
+
+Every call that moves money, or sets up its movement, needs a key with the `payouts` scope. Such a
+key is always bound to an IP allowlist, so a key copied off your server is of no use elsewhere.
+
+## Your balance
+
+`GET /v1/balances` shows each asset's balance in three parts:
+
+| Part        | Meaning                                                              |
+| ----------- | -------------------------------------------------------------------- |
+| `available` | Settled and free. Payouts and refunds draw on this alone.            |
+| `pending`   | Credited on Bitcoin, but not yet at its settle depth.                |
+| `reserved`  | Held for payouts and refunds under way.                              |
+
+## Destinations
+
+A destination is an address of yours on one network. Add one with
+`POST /v1/payout-destinations`, or pay an address directly, which adds it.
+
+- **A new destination waits** before it can be paid: 24 hours in live, 5 minutes in the sandbox.
+  `destination.created` is sent at once, so your systems can raise an alarm about an address
+  nobody meant to add, and `destination.active` once it can be paid. The wait is what keeps a
+  stolen key from paying everything out to its thief.
+- **Addresses are checked** before they are taken: each network's format and checksum, and never
+  one of Nowgate's own addresses. On TRON give the `T…` form.
+- **Disabling** one (`DELETE /v1/payout-destinations/{id}`) stops it at once. Payouts still waiting
+  for it fail, and what they held comes back to your balance. Adding the address again makes a
+  new destination, which waits like any other.
+- You can have up to 1,000 enabled destinations.
+
+## Making a payout
+
+<SdkTabs region="payout">
+
+```bash
+curl https://api.nowgate.io/v1/payouts \
+  -H "Authorization: Bearer $NOWGATE_PAYOUTS_KEY" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -H "Content-Type: application/json" \
+  -d '{"network":"tron","asset":"USDT","address":"T...","amount":"250","external_id":"pay-run-42"}'
+```
+
+</SdkTabs>
+
+| Field                                          | Meaning                                                                                               |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `destination`, or `network`, `address`         | Where it goes.                                                                                        |
+| `asset`, `amount`                              | What, as a decimal string in the asset's units.                                                       |
+| `fee_paid_by`                                  | `merchant` (the default): the destination gets `amount`. `payee`: the network fee comes out of it.     |
+| `external_id`                                  | Your own reference, unique among your payouts.                                                        |
+| `send_at`                                      | Optional: send no earlier than this, at most 30 days ahead.                                           |
+| `webhook_url`, `metadata`                      | As on payments: this payout's events go to its own URL, signed with your default endpoint's secret.   |
+
+The payout's whole cost is reserved from your available balance at once. `amount_debited` is what
+it takes from your balance, and `amount_sent` what the destination receives.
+
+### Fees
+
+- **The network fee** is quoted in the payout's own asset when you create it, as the most the
+  network can take, and reserved with the amount. Once the payout is finished, `network_fee` is
+  what the network took and the rest is back in your balance: `amount_debited` then says what
+  the payout cost you.
+- **Nowgate's payout fee** is `payout_fee`, 0.
+- When the network's fee can't be estimated right now, or a token can't be priced, the payout is
+  refused with `fee_estimate_unavailable` or `rate_unavailable` (`503`). Retry shortly, with the
+  same `Idempotency-Key`.
+
+## Statuses
+
+| Status                | Meaning                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `awaiting_approval`   | Your account requires a person's approval, and nobody has given it yet.                                 |
+| `scheduled`           | `send_at` is still ahead.                                                                               |
+| `waiting_destination` | Its destination is still waiting.                                                                       |
+| `queued`              | Ready, and about to be sent. `waiting_reason` says why when it waits longer than usual.                 |
+| `sending`             | Signed and broadcast; `transaction` shows it. Not final yet.                                            |
+| `finished`            | Final on the chain.                                                                                     |
+| `failed`              | It couldn't be sent, or the network refused it. `failure_reason` says why, and its cost is back in your balance. |
+| `canceled`            | You canceled it before it was signed, and its cost is back in your balance.                             |
+
+Each payout sends `payout.created`, then `payout.<status>` on every change, to your
+[webhooks](/webhooks). Cancel one with `POST /v1/payouts/{id}/cancel` until it is signed; once it
+is `sending`, it can't be stopped.
+
+## Batches and CSV
+
+`POST /v1/payout-batches` makes up to 1,000 payouts at once, as JSON `items`, or as CSV text in a
+`csv` field (UTF-8, at most 256 KiB) whose header names its columns:
+
+```csv
+network,asset,address,amount,fee_paid_by,external_id
+tron,USDT,T...,120.50,,inv-1001
+solana,USDC,7Ec...,75,payee,inv-1002
+```
+
+A batch is all or nothing. Every item is checked first, and one bad item refuses the whole batch,
+with every problem listed by item (`/items/3/amount`) or by CSV line (`/csv/line/4/address`).
+Each item is an ordinary payout with its own ID and events; the batch sends `batch.created`, and
+`batch.finished` once every item is final.
+
+## Limits
+
+Each asset has a limit per payout and per day (payouts created in a rolling 24 hours), about
+10,000 USD and 50,000 USD of the asset by default. Batches, refunds and forwarding count too. A
+payout over a limit is refused with `payout_limit_exceeded`, which says what remains.
+
+## Approvals
+
+Your account can require a person's approval for every payout and refund: each then waits in
+`awaiting_approval` until a member of your team approves it in the dashboard, with their second
+factor bound to exactly what they approve. No API key can approve one, whatever its scopes: that is what
+makes it a second step. Under `two_person`, the approver must be someone other than the payout's
+creator. See [payout approvals](/approvals).
+
+## In the sandbox
+
+The sandbox's payouts are simulated. They go through the same API, limits, reservations, statuses
+and webhooks, but no chain: a payout is `sending` at once, with a `sim:` transaction hash, and
+`finished` about 10 seconds later. Its network fee is a fixed, notional amount.
+
+- [`POST /v1/sandbox/payout-destinations/{id}/activate`](/api/sandbox) makes a new destination
+  usable at once, instead of after 5 minutes.
+- [`POST /v1/sandbox/payouts/{id}/simulate`](/api/sandbox) with `action: "fail"` fails a payout
+  that hasn't finished.
+- The sandbox's balance is its simulated deposits: a payout of a balance that came from a real
+  testnet deposit fails with `simulated_funds_insufficient`.

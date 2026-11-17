@@ -1,0 +1,41 @@
+---
+title: Amounts
+description: Amounts are decimal strings in the asset's units, never floats. How the API and the SDKs take, return and convert them.
+---
+
+Amounts are decimal strings in the asset's own units: `"49.90"` USDT, `"0.0015"` BTC. They are
+never JSON numbers, so no amount is ever rounded by floating point on its way to you.
+
+- **What you send:** at most as many decimal places as the asset has (`GET /v1/assets` lists
+  each asset's `decimals`). A more precise amount is refused with
+  [`amount_too_precise`](/errors/amount_too_precise), not rounded.
+- **What comes back:** the canonical form, with no trailing zeros: `"49.90"` comes back as
+  `"49.9"`, and zero as `"0"`.
+- **Minimums:** every asset has a minimum payment, so network fees can't eat it. `GET /v1/assets`
+  and `GET /v1/min-amount` show them; a smaller amount is refused with
+  [`amount_too_small`](/errors/amount_too_small).
+- **Prices in a currency** (`price_amount`) are strings too, with at most two decimal places.
+
+<SdkTabs region="invalid-request" />
+
+## In the SDKs
+
+The SDKs check that an amount is a string before sending, and leave its format to the API, so
+every client gets the same answer with the field's pointer.
+
+| | Accepted | Refused before sending |
+| --- | --- | --- |
+| TypeScript | `string` | `number` and `bigint`: a `TypeError` naming the field |
+| Python | `str`, `int`, a finite `decimal.Decimal` | `float` and `bool`: a `TypeError` naming the field |
+| PHP | `string`, `int` | `float` and `bool`: an `InvalidArgumentException` naming the field |
+
+## Converting
+
+Each SDK has exact helpers, without floating point, for an asset's smallest units (its
+`decimals` from `assets.list()`):
+
+| | TypeScript | Python | PHP |
+| --- | --- | --- | --- |
+| `"1.5"` with 6 decimals to units | `Amounts.toUnits("1.5", 6)` → `1500000n` | `Amounts.to_units("1.5", 6)` → `1500000` | `Amounts::toUnits('1.5', 6)` → `'1500000'` |
+| units back to an amount | `Amounts.fromUnits(1500000n, 6)` → `"1.5"` | `Amounts.from_units(1500000, 6)` → `"1.5"` | `Amounts::fromUnits('1500000', 6)` → `'1.5'` |
+| compare | `Amounts.compare("1.5", "1.50")` → `0` | `Amounts.compare("1.5", "1.50")` → `0` | `Amounts::compare('1.5', '1.50')` → `0` |

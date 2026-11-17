@@ -1,0 +1,108 @@
+---
+title: Quickstart
+description: Create a payment, show its address, and handle the webhook when it is paid.
+---
+
+<Callout title="API keys and webhook endpoints">
+  Create them in the dashboard, under Developers: at `sandbox-app.nowgate.io` for the sandbox and
+  `account.nowgate.io` for live. A key and an endpoint's secret are shown once, when you create them.
+  New here? [Open the sandbox](https://sandbox-app.nowgate.io/sign-up): its accounts are separate
+  from your main account at `account.nowgate.io`.
+</Callout>
+
+<Steps>
+<Step>
+
+## Create a payment
+
+Use an [SDK](/sdks) or plain HTTP. With an SDK, make a client with your API key:
+
+<SdkTabs region="client" />
+
+Then send the network, the asset and the amount, with an idempotency key so a retry can never
+create a second payment. Your order ID makes a good key.
+
+<SdkTabs region="create-payment">
+
+```bash
+curl https://api.nowgate.io/v1/payments \
+  -H "Authorization: Bearer $NOWGATE_API_KEY" \
+  -H "Idempotency-Key: order-1042" \
+  -H "Content-Type: application/json" \
+  -d '{"network": "tron", "asset": "USDT", "amount": "49.90", "order_id": "1042"}'
+```
+
+</SdkTabs>
+
+The response is the new payment, with status `waiting`:
+
+```json
+{
+  "id": "pay_01jc3x6k2tf8yq0b5n2c7m9d4v",
+  "object": "payment",
+  "status": "waiting",
+  "network": "tron",
+  "asset": "USDT",
+  "amount": "49.9",
+  "amount_received": "0",
+  "amount_pending": "0",
+  "amount_credited": "0",
+  "fee": "0",
+  "deposit": { "address": "TN3W4H6rK5ZsKxVbqh8ZpXhVv2dm3kGaQ1" },
+  "late": false,
+  "overpaid": false,
+  "reversed": false,
+  "order_id": "1042",
+  "metadata": {},
+  "expires_at": "2026-11-05T13:00:00Z",
+  "created_at": "2026-11-05T12:00:00Z",
+  "updated_at": "2026-11-05T12:00:00Z",
+  "version": 1
+}
+```
+
+</Step>
+<Step>
+
+## Show the deposit address
+
+Show your customer `deposit.address`, the exact `amount` and asset, and the network, and when the
+payment expires (`expires_at`, an hour by default).
+
+Or send them to the payment's `checkout_url`: a hosted page with all of that, a QR code their
+wallet can scan, and the payment's live status, in their language.
+
+</Step>
+<Step>
+
+## Receive the webhook
+
+As the payment changes, Nowgate POSTs events to your endpoint: `payment.confirming` when the deposit
+is seen, then `payment.finished` when it is final and credited. Verify each one over the raw body
+before trusting it. The SDKs verify it for you; without one, use a tested function from the
+[webhooks guide](/webhooks#without-an-sdk):
+
+<SdkTabs region="verify-webhook" />
+
+</Step>
+<Step>
+
+## Check before you deliver
+
+A webhook tells you something changed. Before you ship goods, fetch the payment and check its
+status. In the sandbox you can [play the payer](/sandbox#play-the-payer) to see it happen:
+
+<SdkTabs region="follow-payment">
+
+```bash
+curl https://api.nowgate.io/v1/payments/pay_01jc3x6k2tf8yq0b5n2c7m9d4v \
+  -H "Authorization: Bearer $NOWGATE_API_KEY"
+```
+
+</SdkTabs>
+
+Deliver when `status` is `finished`. A payment that received less than its amount is
+`partially_paid` instead: see [underpayments](/payments#underpayments).
+
+</Step>
+</Steps>

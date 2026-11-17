@@ -1,0 +1,72 @@
+---
+title: Embeds
+description: Put checkout on your own site, as a widget, an overlay, a button or a badge.
+---
+
+Every [payment link](/payment-links) and payment has a [hosted checkout page](/checkout)
+at its `checkout_url`. You can also bring checkout to your own pages, in four ways.
+
+## The widget
+
+An iframe of checkout's compact layout, with every state the full page has. Use your link's
+token, from its `checkout_url`:
+
+```html
+<iframe src="https://pay.nowgate.io/embed/l/yhcrgeuaebrryccqrepckh4wib"
+        title="Pay with crypto" style="width:100%;max-width:440px;height:720px;border:0"
+        allow="clipboard-write"></iframe>
+```
+
+Only the `/embed/` pages may be framed. Every other checkout page refuses framing, so nobody can
+put your checkout under a disguise.
+
+## The overlay
+
+A script of about 2 KB, plain JavaScript with no dependencies, that opens checkout in a modal over
+your page. Load it once:
+
+<OverlayScript />
+
+Then either mark a link to your payment link's page, which keeps working without the script:
+
+```html
+<a href="https://pay.nowgate.io/l/yhcrgeuaebrryccqrepckh4wib" data-nowgate-overlay>Pay with crypto</a>
+```
+
+or open it from your code, with a link's token or a payment's:
+
+```js
+Nowgate.open({
+  link: "yhcrgeuaebrryccqrepckh4wib",
+  onStatus: ({ status, token }) => console.log(status, token), // waiting, confirming, finished, ...
+  onClose: () => console.log("closed"),
+});
+```
+
+- **The modal** keeps focus inside it, closes on Escape or the close button, and returns focus to
+  what opened it.
+- **Its messages:** the overlay tells checkout your page's origin, and checkout reports the
+  payment's status to that origin alone. The script believes only messages from its own checkout
+  frame. The same events reach `window` as `nowgate:status` and `nowgate:close`.
+- **Status isn't payment.** Credit an order on your server, from the signed
+  [webhook](/webhooks) or `GET /v1/payments/{id}`, never from a message in the browser.
+- **The script's integrity hash** is above. `v1` changes only compatibly; the hash changes with
+  it, so pin the file if you pin the hash.
+
+## Buttons
+
+Make a [payment link](/payment-links) for what you sell, and share its `checkout_url`:
+
+<SdkTabs region="payment-link" />
+
+Then copy a button for your link's URL. The styles are inline, so they work on any page with no
+stylesheet. Add `data-nowgate-overlay` to open the overlay instead of the page.
+
+<ButtonGallery />
+
+## Badges
+
+A set of SVG badges, light and dark, drawn with their text as outlines, so they look the same
+everywhere.
+
+<BadgeGallery />

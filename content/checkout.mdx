@@ -1,0 +1,70 @@
+---
+title: Checkout
+description: The hosted page every payment and payment link has, what payers see on it, its languages and receipts.
+---
+
+Every payment has a hosted checkout page at its `checkout_url`, and every
+[payment link](/payment-links) has one at its own. Send payers there, or bring checkout to
+your own site with [the widget or the overlay](/embeds). Create the payment as usual, then send the
+payer to its `checkout_url`:
+
+<SdkTabs region="create-payment" />
+
+## What payers see
+
+On a link's page, payers choose how to pay:
+
+- the price, and each asset the link takes with what it costs now. An asset without a
+  [rate](/prices-and-rates) at the moment is shown, but can't be chosen.
+- for an open amount, its presets and, if you allow it, an amount of their own between your
+  minimum and maximum
+- for donations, a name and a message if they like, or neither
+
+A payment's page shows them how to pay it:
+
+- the amount, and the price when it has one
+- a QR code, and a button that opens their wallet. Both carry a payment URI in the network's
+  standard: BIP-21 on Bitcoin, EIP-681 on the EVM networks and Solana Pay on Solana. TRON and
+  Bittensor have no standard, so their codes hold the address.
+- the address to copy
+- when the payment expires
+
+The page follows the payment as it moves, without a reload: each deposit as it confirms, what is
+still due after a partial payment, and the paid or expired page at the end. A screen reader
+announces each change.
+
+## Languages
+
+Checkout comes in ten languages: English, Spanish, Brazilian Portuguese, French, German, Italian,
+Turkish, Russian, Simplified Chinese and Japanese. It opens in the language a `lang` parameter
+asks for (`?lang=de`), then the one the payer chose before, then their browser's, and English
+otherwise. Payers can switch at any time.
+
+## Receipts
+
+On a link with `receipts: true`, the paid page offers the payer a receipt by email, and so does the
+page of a payment that closed partly paid. It is sent once the payment is final, in the payer's
+language. It shows your display name, what they paid, the price when there is one, and the
+transactions. Nowgate uses the address for nothing else, and deletes it 30 days after sending.
+
+## Branding and redirects
+
+A link's [branding](/api/payment-links) appears on its page and on its payments' pages: the display
+name, an accent color and a logo. Checkout picks a text color for the accent that meets WCAG AA.
+
+With `success_url`, the paid page has a button back to your site. With `cancel_url`, the link's page
+has a way back for a payer who changes their mind.
+
+## Tokens and limits
+
+The token in a checkout URL is the page's only key. Anyone holding the URL can see what the page
+shows: the payment's amount, address and status, and your display name. They can't see its
+metadata, your fees or your other payments, and the token doesn't work on the merchant API. Keep
+checkout URLs out of public places, as you would a receipt.
+
+Checkout makes at most 20 payments an hour for one IP address, and a link has at most 50 open at
+once.
+Beyond that, checkout answers [`attempt_limit`](/errors/attempt_limit) with `Retry-After`. A
+payer's browser that already has an open payment for the same choice gets that payment back, so a
+reload or a double click doesn't make a second one. An inactive link answers
+[`link_inactive`](/errors/link_inactive).

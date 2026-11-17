@@ -1,0 +1,60 @@
+---
+title: Introduction
+description: Accept crypto payments on eight networks with one API.
+---
+
+<Callout title="Start in the sandbox">
+  [Open the sandbox](https://sandbox-app.nowgate.io/sign-up): the same engine as live, without
+  real money. It is a system of its own, with accounts and keys separate from your main
+  account's, and everything you build there works the same with real payments.
+</Callout>
+
+Nowgate gives each order its own deposit address on Bitcoin, Ethereum, BNB Smart Chain, Polygon,
+Base, TRON, Solana or Bittensor. It watches the chain, waits until the deposit is final,
+credits your balance and tells your server with a signed webhook.
+
+## Networks and assets
+
+Each network–asset pair is its own asset: USDT on TRON and USDT on Ethereum never share a
+balance. Send both `network` and `asset` when you create a payment.
+
+<NetworksTable />
+
+## How it fits together
+
+- **Payment.** You create one per order with a network, an asset and an amount. It holds the
+  deposit address you show your customer, and its status tells you where things stand.
+- **Deposit.** Your customer sends funds to that address. Nowgate follows the chain, counts
+  confirmations and handles reorganizations before anything is credited.
+- **Webhook.** Every change to the payment is sent to your server as a signed event, retried for
+  about 72 hours until you acknowledge it.
+- **Balance.** Confirmed funds are credited to your balance in a double-entry ledger, minus
+  Nowgate's fee.
+- **Checkout.** Every payment has a [hosted checkout page](/checkout) at its `checkout_url`,
+  and a [payment link](/payment-links) is a reusable one. Price either in an asset or in
+  USD or EUR, and bring checkout to your own site with [the widget or the overlay](/embeds).
+- **Dashboard.** Your team manages payments, payouts, keys and webhooks in the dashboard, each
+  member with [their own permissions](/team) and [two-step sign-in](/account-security), and sells
+  in person with [the point of sale](/point-of-sale).
+
+## Environments
+
+| Environment | Base URL                              | API keys          |
+| ----------- | ------------------------------------- | ----------------- |
+| Live        | `https://api.nowgate.io/v1`           | `ngk_live_…`      |
+| Sandbox     | `https://sandbox-api.nowgate.io/v1`   | `ngk_sandbox_…`   |
+
+The sandbox runs on test networks with its own keys and data. A key works only in its own
+environment. It can also [play the payer](/payments#testing-in-the-sandbox), so you can test
+every case without testnet coins.
+
+## Next steps
+
+<Cards>
+  <Card title="Quickstart" href="/quickstart" description="Create a payment and handle its webhook." />
+  <Card title="Payments" href="/payments" description="Statuses, amounts, expiry and edge cases." />
+  <Card title="Webhooks" href="/webhooks" description="Events, signatures and retries." />
+  <Card title="Checkout" href="/checkout" description="The hosted page, its languages and receipts." />
+  <Card title="Embeds" href="/embeds" description="The widget, the overlay, buttons and badges." />
+  <Card title="API reference" href="/api" description="Every operation and object." />
+</Cards>

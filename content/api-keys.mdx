@@ -1,0 +1,54 @@
+---
+title: API keys
+description: "Keys, environments and scopes: which key reaches which API, and what each may do."
+---
+
+Send your API key as a bearer token:
+
+```http
+Authorization: Bearer ngk_live_…
+```
+
+Two operations need no key: the API's [status](/api/status) and its [assets](/api/assets). A key
+sent with them is still checked, so a broken key fails loudly. The SDKs send it with every call.
+
+## Environments
+
+A key belongs to one environment, and its prefix says which. The SDKs pick the API from it, so a
+key can't reach the wrong one by mistake.
+
+| Key | API | Moves real money |
+| --- | --- | --- |
+| `ngk_live_…` | `https://api.nowgate.io/v1` | yes |
+| `ngk_sandbox_…` | `https://sandbox-api.nowgate.io/v1` | no: see [the sandbox](/sandbox) |
+
+<SdkTabs region="client" />
+
+The samples on these pages run against a local engine, so they pass its address as the base URL.
+With a live or sandbox key, leave it out.
+
+## Scopes
+
+Each key carries scopes, chosen when you create it in the dashboard:
+
+| Scope | Allows |
+| --- | --- |
+| `read` | Reading everything: payments, payment links, rates and estimates, balances, payout destinations, payouts and batches, forwarding and refunds. |
+| `payments` | Creating payments, creating and changing payment links, uploading logos, and in the sandbox, playing the payer; and everything `read` allows. |
+| `payouts` | Everything that moves money out: payout destinations, payouts and batches, refunds and forwarding, and in the sandbox, failing a payout or activating a destination at once; and everything `read` allows. A `payouts` key needs an IP allowlist: it works only from the addresses you list. |
+
+Each operation in the [API reference](/api) names the scope it needs.
+
+A key without the scope an operation needs gets `403` with
+[`insufficient_scope`](/errors/insufficient_scope); a payouts key used from another address gets
+[`ip_not_allowed`](/errors/ip_not_allowed). An unknown or revoked key gets `401`.
+
+## Keeping keys safe
+
+- **Servers only.** A key must never reach a browser or an app. The TypeScript SDK refuses to run
+  where a `document` exists.
+- **One key per use,** with the fewest scopes it needs: a `read` key for reporting, a `payments`
+  key for your checkout, a `payouts` key on the one server that pays out.
+- **Never shown.** The SDKs show only a key's prefix and last four characters, as the dashboard
+  does, in errors, logs and debug output.
+- **Rotate** by creating a new key, deploying it, then revoking the old one.

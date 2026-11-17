@@ -1,0 +1,31 @@
+---
+title: Pagination
+description: Lists are newest first and page by ID. Walk them one page at a time, or let the SDKs walk every page.
+---
+
+Every list (payments, payment links, payouts, payout destinations, batches and refunds) is newest
+first and answers one page:
+
+```json
+{ "object": "list", "data": [{ "id": "pay_…" }, { "id": "pay_…" }], "has_more": true }
+```
+
+| Parameter | What |
+| --- | --- |
+| `limit` | Items per page: 20 by default, at most 100. |
+| `starting_after` | An ID from the previous page: the page of older items after it. |
+| `ending_before` | An ID: the page of newer items before it. |
+
+Plus each list's filters, such as a payment's `status` or `order_id`. `has_more` says whether
+there is another page. Pages are by ID, so items created while you walk neither repeat nor shift
+your walk: newer items appear in a new walk.
+
+<SdkTabs region="list" />
+
+## Every page
+
+`listAll` (`list_all` in Python) walks every page for you, newest first, asking for 100 items at a
+time unless you give a `limit`, and follows `starting_after` while `has_more` is true. It fetches
+nothing until you iterate, stops when you do, and retries each page as any `GET`.
+
+<SdkTabs region="list-all" />

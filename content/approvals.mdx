@@ -1,0 +1,68 @@
+---
+title: Payout approvals
+description: Require a person to approve every payout and refund, or two people, and approve them in the dashboard with a check bound to exactly what you approve.
+---
+
+With approvals on, every payout and refund waits in `awaiting_approval` until a member of your
+team approves it in the dashboard. No API key can approve one, whatever its scopes, so a stolen
+key can't move money on its own.
+
+## The modes
+
+Choose one under **Settings**, in the payout approvals section:
+
+| Mode         | Who approves                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------------ |
+| `none`       | Nobody: payouts go out once their [checks](/payouts) pass. The default.                          |
+| `required`   | Any member who may approve payouts, including whoever created the payout.                        |
+| `two_person` | A member who may approve payouts, other than the one who created it. Payouts created with an API key can be approved by any approver. |
+
+- **Turning approvals on** takes effect at once, for payouts created from then on.
+- **Turning them off** asks you to [confirm it's you](/account-security#sensitive-actions-ask-again).
+
+## What waits
+
+- **Payouts,** single or in a [batch](/payouts#batches-and-csv), from the API or the dashboard.
+  Each item of a batch waits on its own.
+- **[Refunds](/refunds),** returns of [stuck deposits](/stuck-deposits) among them. A refund
+  waiting for its payer's address waits for approval once the address is given.
+- **Not [forwarding](/forwarding):** setting up a forwarding rule itself asks you to confirm it's
+  you, and its payouts go to your own active destination.
+
+A waiting payout holds its amount, as any payout under way does, and goes out only once approved.
+You can cancel it meanwhile, and disabling its destination fails it: either way, its hold comes
+back to your balance.
+
+## Who approves
+
+Approving is a permission of its own, apart from managing payouts: give it to members on the
+[Team](/team#sections-and-permissions) page. The owner, admins and the finance role have it by
+default. Payouts waiting for approval are counted on the **Approvals** page.
+
+Members who approve but don't manage payouts see an **Approvals** item in the dashboard's menu,
+and nothing else of the payouts section.
+
+## Approving
+
+The **Approvals** page lists what waits, with each destination and how long it has existed: a
+destination added minutes ago deserves a closer look. Choose up to 50 payouts, then approve them
+with one check, which takes [two-step sign-in](/account-security#two-step-sign-in): an approver
+without it turns it on first.
+
+- **A passkey or security key:** its challenge is made from the payouts you chose, their amounts
+  and their destinations, so your device signs exactly what you saw and nothing else.
+- **A code from your authenticator app,** sent with the approval itself.
+
+An approval always needs its own check, never one from a few minutes before. Each approved payout
+records who approved it (`approved_by`), then goes on as usual: to `queued`, to `scheduled`, or to
+`waiting_destination` if its destination is still waiting.
+
+**Declining** cancels the chosen payouts, and what they held comes back to your balance.
+
+## When an approval is refused
+
+| Code               | Why                                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------- |
+| `self_approval`    | Under `two_person`, you created one of these payouts. Another approver must approve it.     |
+| `approval_changed` | A payout changed after you opened the approval, such as being canceled. Reload and choose again. |
+| `code_invalid`     | The code or the passkey wasn't accepted.                                                    |

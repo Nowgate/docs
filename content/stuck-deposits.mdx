@@ -1,0 +1,50 @@
+---
+title: Stuck deposits
+description: Coin that reached one of your payments but couldn't count toward it. Accept it into your balance, or return it to the payer.
+---
+
+Payers sometimes send the wrong coin to a payment's address, or pay after the payment has failed.
+Such coin can't count toward the payment, so Nowgate holds it apart, in suspense, and never
+credits it on its own. When it reached one of your payments, you decide what happens to it, on the
+**Payments** section's **Stuck deposits** page.
+
+## Why a deposit gets stuck
+
+| Reason           | What happened                                                         |
+| ---------------- | --------------------------------------------------------------------- |
+| `wrong_asset`    | Another asset was sent to the payment's address.                      |
+| `wrong_network`  | The right address, on another network.                                |
+| `payment_failed` | It arrived after the payment failed or was refunded.                  |
+| `dust`           | It was below the asset's dust threshold.                              |
+
+A payment that receives only such coin `failed`, as the [payments guide](/payments) describes.
+
+## Accept or return
+
+Members who manage payments choose one of two things for each deposit:
+
+- **Accept:** the coin joins your available balance, less Nowgate's payment fee, as a
+  payment's would. The payment's status doesn't change. Your webhooks get
+  [`payment.deposit_accepted`](/webhooks), with the payment.
+- **Return:** all of the coin goes back to the payer, as a [refund](/refunds). Give the payer's
+  address, or leave it empty to send them the refund's page, where they give it themselves. The
+  network fee comes out of the coin, and there is no payout fee. Returning asks you to
+  [confirm it's you](/account-security#sensitive-actions-ask-again), and the refund waits for
+  [approval](/approvals) if your payouts do.
+
+A deposit is resolved once: accepted or returned, never both, even if two members try at the same
+moment. Both are recorded in your [activity trail](/team#activity).
+
+## When you can choose
+
+- **Only final coin.** A deposit can be resolved once its transfer is final: at its network's
+  finalized block, or on Bitcoin at its settle depth. Until then a reorganization could still undo
+  it, and the page says to wait.
+- **Dust can only be accepted.** Returning it would cost more in fees than it is worth.
+
+## Coin that reached no payment
+
+Coin sent to an address that belongs to no payment has no merchant to decide. Nowgate's operators hold it. If a payer sent you something that way, contact
+Nowgate support with the payment it was meant for and the transaction ID: an operator can credit
+it to that payment's balance, with a note you see in your activity trail, or return it to the
+payer. The payment's own status doesn't change.

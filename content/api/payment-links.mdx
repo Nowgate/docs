@@ -1,0 +1,31 @@
+---
+title: Payment links
+description: Reusable checkout pages, for fixed prices and for donations.
+---
+
+A payment link never expires. Each attempt on it is an ordinary [payment](/api/payments) that
+names the link in `payment_link`, with its own quote, and sends you its events like any payment.
+
+## Create a payment link
+
+<Operation id="createPaymentLink" scope="payments" />
+
+## Retrieve a payment link
+
+<Operation id="getPaymentLink" scope="read" />
+
+## List payment links
+
+<Operation id="listPaymentLinks" scope="read" />
+
+## Update a payment link
+
+<Operation id="updatePaymentLink" scope="payments" />
+
+## Upload a logo
+
+<Operation id="createLogo" scope="payments" />
+
+## The payment link object
+
+<SchemaBlock name="PaymentLink" />

@@ -1,0 +1,50 @@
+---
+title: Prices and rates
+description: "Price a payment in USD or EUR: how Nowgate converts it, how long the amount holds, markups, who pays the fee, and the rates, estimates and minimums behind it."
+---
+
+A payment is priced in an asset (`amount: "25"` USDT) or in a currency. For a currency, give
+`price_amount` and `price_currency` (`USD` or `EUR`) instead of `amount`, and Nowgate converts the
+price at its newest rate when it creates the payment. The payment's `amount` is then what the payer
+sends, and `quote` shows the rate it was converted at.
+
+```bash
+curl https://api.nowgate.io/v1/payments \
+  -H "Authorization: Bearer $NOWGATE_API_KEY" \
+  -H "Idempotency-Key: order-1043" \
+  -H "Content-Type: application/json" \
+  -d '{"network": "tron", "asset": "USDT", "price_amount": "49.00", "price_currency": "USD", "order_id": "1043"}'
+```
+
+In the SDKs, the same fields go to `payments.create`, as in [Payments](/payments). A price has at
+most two decimal places, and is a string like every amount.
+
+## How the amount holds
+
+- **Until the payment expires:** 20 minutes by default for a price in a currency, an hour at most.
+- **Late money is valued again.** Funds that arrive after expiry count for their value at the rate
+  when Nowgate first saw them, so a payer can't take a quote and pay when the market suits them.
+  `amount_counted` shows what the confirmed funds count for; your balance is credited with every
+  unit that arrived either way.
+- **Markup:** `markup_bps` (up to 1,000) adds to the converted amount, for example to cover
+  volatility.
+- **The fee:** with `fee_paid_by: "payer"`, the payer sends enough for you to receive the whole
+  price after Nowgate's fee and the network costs. It works for prices in an asset too.
+
+## Rates, estimates and minimums
+
+<SdkTabs region="rates" />
+
+- **`GET /v1/rates`** lists every asset's rate in USD and EUR, when it was taken, and whether it can
+  be used. An asset without a usable rate says why in `reason`.
+- **`GET /v1/estimate`** returns exactly the amount a payment created now would ask for, with its
+  markup and fee, without holding anything.
+- **`GET /v1/min-amount`** returns an asset's minimum payment, and with `currency` its value in that
+  currency, so you can tell a customer the smallest price you can take in it.
+
+## When there is no rate
+
+Nowgate takes its rates from several sources of its own and uses one only when they agree. When no
+rate can be trusted (the sources disagree, too few are fresh, a price jumped, or a stablecoin left
+its peg), creation fails with [`rate_unavailable`](/errors/rate_unavailable). Retry with the same
+`Idempotency-Key`, offer another asset, or price the payment in the asset.

@@ -1,0 +1,101 @@
+---
+title: Point of sale
+description: Sell in person from a phone or tablet. Pair a till, sign cashiers in with a PIN, take a payment with a QR code, print or email the receipt, and read the day's reports.
+---
+
+The point of sale is a till in the browser: open `account.nowgate.io/pos` on a phone or tablet at your
+counter, pair it once, and your cashiers sell from it with a PIN. Each sale is an ordinary
+[payment](/payments), priced in USD or EUR, which the payer pays by scanning a QR code.
+
+## Setting it up
+
+In the dashboard's **Point of sale** section, members who manage the POS set:
+
+| Setting       | What it does                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| Currency      | USD or EUR: the till's prices. USD by default.                                                 |
+| Payment window | How long a sale's payment stays open: 15 minutes by default, up to 60.                        |
+| Fee paid by   | You, by default: the price is what the payer pays, less Nowgate's fee. Or the payer, who pays a little more so you receive the whole price. |
+| Assets        | Which of the assets you accept the till offers. Those you turned off in your settings never appear. |
+
+## Pairing a till
+
+1. **Create a till** on the **Tills** page, with a name such as "Front counter". It asks you to
+   [confirm it's you](/account-security#sensitive-actions-ask-again), then shows a pairing code of 8
+   characters, such as `ABCD-2345`. The code works once, for 10 minutes, and isn't shown again.
+2. **On the device,** open `account.nowgate.io/pos` (`sandbox-app.nowgate.io/pos` in the sandbox) and
+   type the code, a character per box. Case, spaces and dashes don't matter, and an O is read as
+   0, an I or L as 1.
+3. The device is now the till. It stays paired in that browser for 400 days.
+
+From the till's page you can rename it, see when it was last used and by whom, and:
+
+- **Give it a new code** to pair it again, on the same device or another: the device paired
+  before stops working. This asks you to confirm it's you too.
+- **Revoke it:** it stops working at once, and its cashier's shift ends.
+
+Wrong pairing codes are limited to 10 an hour from one address.
+
+## Cashiers and shifts
+
+Members with the sell permission and a PIN appear on your tills by name: give a cashier one on the
+[Team](/team#cashiers-and-pins) page. A till shows your business's name and those names, and
+nothing else of your account.
+
+- **Signing in:** the cashier taps their name and enters their six-digit PIN. That starts a shift,
+  which lasts at most 16 hours. A till has one shift at a time: another cashier signing in ends it.
+- **The lock:** after 2 minutes without a touch, the till locks, and the cashier's PIN unlocks it
+  into the same shift. A till left alone locks on its own too. Another cashier can sign in from the
+  lock screen instead.
+- **Signing out** ends the shift and shows its summary.
+- **A cashier removed** from your team, or whose sell permission is taken away, loses their shift at
+  once.
+
+Wrong PINs are throttled on each till:
+
+- **5 for one cashier** lock that cashier on that till for 15 minutes. A right PIN clears the count.
+- **20 on one till within an hour** lock the till itself, until a member who manages the POS
+  unlocks it on the till's page. The lock ends the till's shift, and the till's page shows it.
+
+A till can create sales, read its own sales of the day, send receipts, and change the signed-in
+cashier's PIN. It never sees your balances, payouts, refunds or settings, and what pairs it means
+nothing to the rest of the dashboard.
+
+## A sale
+
+1. **The price:** the cashier types it on the keypad, in the till's currency, with an optional note
+   of up to 200 characters.
+2. **The asset:** the till lists the assets it offers, with what the payer would pay in each. One
+   that can't be priced right now, or whose amount would be under its minimum, is greyed out with
+   the reason.
+3. **The payer's screen:** the amount, a QR code the payer scans with their wallet, the address
+   with a copy button, and a countdown to the end of the payment window. It follows the
+   payment as it arrives.
+4. **Paid:** the till shows a success screen, then the receipt. A sale the payer doesn't pay can be
+   left: its payment expires as any other does.
+
+Each sale is a payment with its order ID set to the sale's number, such as `POS-000123`, counted
+per business, and its description set to the note. Your [webhooks](/webhooks), the API and the
+dashboard see it as an ordinary payment; in the dashboard, its page also shows the sale's number,
+till, cashier and price.
+
+## Receipts
+
+- **On screen and on paper:** your business's name, the sale's number and time, the cashier, the
+  price and the amount paid, the network and the transaction ID. Print it from the till, sized for
+  58 mm or 80 mm receipt paper or A4: the till remembers the width you chose.
+- **By email:** the payer types their address on the till, and the receipt is sent once the payment
+  is final. This works whether or not your [checkout receipts](/checkout) are on, because the payer
+  asked in person.
+
+## Reports
+
+The **Reports** page adds up your sales per till or per cashier, by day or by shift:
+
+- the number of sales by status
+- what was received, per asset, counting every sale's confirmed amount
+- the total in the till's currency of the finished sales
+
+Days are counted in your browser's time zone. A report spans at most 92 days and 100,000 sales,
+and exports as CSV, one line per group. Cashiers see their shift's summary on the till when they
+sign out.

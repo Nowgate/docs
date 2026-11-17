@@ -1,0 +1,74 @@
+---
+title: PHP
+description: Install and use Nowgate's PHP SDK, for PHP 8.1 and later, with ext-curl and no other dependencies.
+---
+
+```bash
+composer require nowgate/nowgate
+```
+
+The SDK needs PHP 8.1 or later with `ext-curl` and `ext-json`, and no other package. Its results
+are arrays, described for PHPStan as array shapes, so your static analysis checks every
+field you read.
+
+## Configure
+
+<Sample sdk="php" region="client" />
+
+| Option | Default | What |
+|---|---|---|
+| `api_key` | (needed) | Your API key. Its environment picks the API. |
+| `base_url` | from the key | Another API, such as a local engine. |
+| `timeout` | `60` | Seconds each attempt may take. |
+| `max_retries` | `2` | How many times a failed attempt is retried. |
+| `transport` | curl | Your own HTTP client: see below. |
+| `app_info` | none | Your application, added to the `User-Agent`: `my-shop/1.2`. |
+
+Every method takes a last options array: `['idempotency_key' => ..., 'timeout' => ..., 'max_retries' => ...]`.
+
+## Calls
+
+<Sample sdk="php" region="create-payment" />
+
+To read the status, the headers and the request's ID too, make the same call through
+`$nowgate->withResponse()`:
+
+<Sample sdk="php" region="idempotent-retry" />
+
+<SdkMethods sdk="php" />
+
+## Errors
+
+<Sample sdk="php" region="invalid-request" />
+
+The exceptions are `Nowgate\Exception\NowgateException`, `ApiException` and its classes by
+status (`AuthenticationException`, `PermissionException`, `NotFoundException`,
+`ConflictException`, `InvalidRequestException`, `RateLimitException`, `ServerException`),
+`ConnectionException` when there's no answer, and `SignatureVerificationException`. The API's
+code is `$e->errorCode`, since an exception's own code is a number. A float where an amount goes
+is an `InvalidArgumentException`, before anything is sent. See [Errors](/errors).
+
+## Pages
+
+<Sample sdk="php" region="list-all" />
+
+`listAll` is a generator: it fetches nothing until you iterate, and stops when you do.
+
+## Amounts
+
+Amount fields take a decimal string or an `int`. `Amounts::toUnits`, `Amounts::fromUnits` and
+`Amounts::compare` convert and compare amounts exactly, as digit strings, without `bcmath`. See
+[Amounts](/amounts).
+
+## Webhooks
+
+<Sample sdk="php" region="verify-webhook" />
+
+In Laravel, the raw body is `$request->getContent()`. See [Webhooks](/webhooks).
+
+## Your own HTTP client
+
+A transport implements `Nowgate\Transport\Transport`: `send(Request $request): Response`. When
+there's no answer, it throws a `Nowgate\Transport\TransportException`, which the client retries.
+
+<Sample sdk="php" region="transport" />

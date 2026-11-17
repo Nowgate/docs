@@ -1,0 +1,92 @@
+---
+title: Errors
+description: Every error is RFC 9457 problem details with a stable code you can branch on.
+---
+
+When a request fails, the response has a `4xx` or `5xx` status and an
+`application/problem+json` body:
+
+```json
+{
+  "type": "https://docs.nowgate.io/errors/amount_too_precise",
+  "title": "Unprocessable Entity",
+  "status": 422,
+  "detail": "USDC has 6 decimal places; amounts are never rounded.",
+  "instance": "/v1/payments",
+  "code": "amount_too_precise",
+  "request_id": "req_01jc3xb1n6f0q2w8e4r7t5y9v3",
+  "errors": [
+    {
+      "pointer": "/amount",
+      "code": "amount_too_precise",
+      "detail": "USDC has 6 decimal places; amounts are never rounded."
+    }
+  ]
+}
+```
+
+| Field        | Meaning                                                                              |
+| ------------ | ------------------------------------------------------------------------------------ |
+| `code`       | A stable, machine-readable code. Branch on this, never on `title` or `detail`.       |
+| `type`       | A link to the code's page in these docs.                                             |
+| `detail`     | What exactly was wrong, in a sentence for humans.                                     |
+| `errors`     | Field problems, each with a JSON `pointer` into your request.                         |
+| `request_id` | Quote it when you contact support. It is also in the `X-Request-Id` header.           |
+
+## In the SDKs
+
+Each SDK turns a problem into an exception of its status's class, carrying the whole problem:
+`status`, `code`, `title`, `detail`, `type`, `instance`, `request_id`, `retry_after` (from
+`Retry-After`, in seconds) and `errors` with their pointers. PHP spells them in camelCase, and the
+code is `errorCode` there, since an exception's own code is a number.
+
+<SdkTabs region="invalid-request" />
+
+| When | TypeScript | Python | PHP (`Nowgate\Exception\…`) |
+| --- | --- | --- | --- |
+| every SDK error | `NowgateError` | `NowgateError` | `NowgateException` |
+| any problem the API answers with | `ApiError` | `ApiError` | `ApiException` |
+| `401` | `AuthenticationError` | `AuthenticationError` | `AuthenticationException` |
+| `403` | `PermissionError` | `PermissionDeniedError` | `PermissionException` |
+| `404` | `NotFoundError` | `NotFoundError` | `NotFoundException` |
+| `409` | `ConflictError` | `ConflictError` | `ConflictException` |
+| `400`, `405`, `413`, `414`, `415`, `422` | `InvalidRequestError` | `InvalidRequestError` | `InvalidRequestException` |
+| `429` | `RateLimitError` | `RateLimitError` | `RateLimitException` |
+| `5xx` | `ServerError` | `ServerError` | `ServerException` |
+| no answer: refused, reset or timed out | `ConnectionError` | `APIConnectionError` | `ConnectionException` |
+| a webhook that doesn't verify | `SignatureVerificationError` | `SignatureVerificationError` | `SignatureVerificationException` |
+
+An answer that isn't problem JSON, such as a proxy's error page, becomes the exception of its
+status with the code `http_<status>` and the first 500 bytes of the body as its detail. The SDKs
+already retry what may succeed on a retry: see [Idempotency and retries](/idempotency).
+
+## Retrying
+
+Most errors fail the same way if you send the same request again. Retry, with the same
+`Idempotency-Key`, only after `409`, `429` and `5xx` errors, and honor `Retry-After` when present.
+When `5xx` errors go on, [status.nowgate.io](https://status.nowgate.io) says whether Nowgate
+knows of an incident, and when it's resolved.
+
+## Rate limits
+
+When a limit is reached, the API answers `429` with the `rate_limited` code, and
+`Retry-After` gives the seconds to wait. The limits:
+
+| Limit                                         | Default                             |
+| --------------------------------------------- | ----------------------------------- |
+| Reads (`GET`) per API key                      | 25 a second, in bursts of up to 50   |
+| Writes (every other method) per API key        | 10 a second, in bursts of up to 20   |
+| Requests per client address                    | 50 a second, in bursts of up to 100  |
+| Requests with a refused API key, per address   | 20 a minute                          |
+
+A burst is how many requests may arrive at once. After it, requests are allowed at the
+steady rate. Each key counts on its own, so a busy integration doesn't slow down
+another one. An IPv6 address counts together with the rest of its `/64`.
+
+An address that keeps presenting keys that are refused with `401` must wait before any
+of its keys is checked again, even a valid one, so fix the key rather than retrying it.
+Spread bulk work over time, and after a `429`, wait as long as `Retry-After` says.
+
+## All codes
+
+<ErrorCodeTable />
