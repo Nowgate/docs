@@ -20,7 +20,7 @@ more on nine networks, through hosted checkout, payment links or the API.
 
 | Language                | Install                            | Repository                                                 |
 | ----------------------- | ---------------------------------- | ---------------------------------------------------------- |
-| TypeScript / JavaScript | `npm install nowgate`              | [Nowgate/nowgate-node](https://github.com/Nowgate/nowgate-node)     |
+| TypeScript / JavaScript | Coming soon on npm                 | [Nowgate/nowgate-node](https://github.com/Nowgate/nowgate-node)     |
 | Python                  | `pip install nowgate`              | [Nowgate/nowgate-python](https://github.com/Nowgate/nowgate-python) |
 | PHP                     | `composer require nowgate/nowgate` | [Nowgate/nowgate-php](https://github.com/Nowgate/nowgate-php)       |
 
