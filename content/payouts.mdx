@@ -67,6 +67,12 @@ it takes from your balance, and `amount_sent` what the destination receives.
   network can take, and reserved with the amount. Once the payout is finished, `network_fee` is
   what the network took and the rest is back in your balance: `amount_debited` then says what
   the payout cost you.
+- **Who pays the network fee:** with `fee_paid_by: "merchant"` (in the dashboard, "You pay the
+  fee — they get the full amount") the destination gets `amount`, and the fee comes from your
+  balance on top. With `"payee"` ("They pay the fee — taken from the amount") the quote comes out
+  of the amount, so the destination gets `amount` less the most the fee can be; what the network
+  doesn't take still comes back to your balance. The dashboard's payout form shows what the
+  destination will receive, and the most your balance pays, before you create the payout.
 - **Nowgate's payout fee** is `payout_fee`, 0.
 - When the network's fee can't be estimated right now, or a token can't be priced, the payout is
   refused with `fee_estimate_unavailable` or `rate_unavailable` (`503`). Retry shortly, with the
