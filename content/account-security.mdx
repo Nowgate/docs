@@ -1,6 +1,6 @@
 ---
 title: Account security
-description: Sign up, verify your email, make your businesses on Account Home, and protect your account with two-step sign-in, fresh checks for sensitive actions, and sessions you control.
+description: Sign up, verify your email, add your businesses on Account home, and protect your account with two-step sign-in, fresh checks for sensitive actions, and sessions you control.
 ---
 
 The dashboard is where you and your team manage payments, payouts, keys and settings. Every
@@ -28,20 +28,31 @@ phone.
 
 **Joining someone else's business?** Ask its owner for an [invitation](/team#invitations).
 
-## Account Home and your businesses
+## Account home and your businesses
 
-Signing in takes you to **Account Home**: every business you belong to, with its logo, its name and
-your role in it. Open one to work on it. The business switcher at the top of the sidebar moves to
-another business, or back to Account Home.
+Signing in takes you to **Account home**: an overview of your businesses over the last 30 days,
+anything in them that needs a look, and a table of every business you belong to, with its status,
+your role, its balance and its payments. Click a business to work on it. The sidebar lists your
+businesses too, and in a business, the switcher at the top of its sidebar moves to another
+business, or back to Account home. Press **⌘K** (**Ctrl+K** on Windows) to search your account's
+pages and businesses.
 
-- **Make a business** on Account Home: give it a name and, if you like, a logo (a PNG or JPEG,
-  which the dashboard fits into a square). You're its owner. Its name and logo show at the top of
-  its dashboard, on its checkout pages and in its emails, and you can change both in its settings.
+- **Add a business** on Account home, or with **Add** at the top of the page: give it a name and,
+  if you like, a logo (a PNG or JPEG, which the dashboard fits into a square). You're its owner.
+  Its name and logo show at the top of its dashboard, on its checkout pages and in its emails, and
+  you can change both in its settings.
 - **Each business is its own:** its payments, balances, payment links, API keys, webhooks, team and
   settings. An account can own up to 25 businesses.
 - **A new business is active at once,** in live as in the sandbox.
+- **Delete a business** you own from the menu (**⋯**) on its row. First the dashboard checks what
+  still moves through it: a business can't be deleted while a payment is open (a customer may
+  still pay), a payout is on its way or a subscription is live, nor while it holds a dollar or
+  more, so pay that out first. Less than a dollar, too little to pay out, you can give up to
+  delete it. Type its name and confirm it's you. Deleting can't be undone: the business leaves
+  your account and its team's, and its API keys, webhooks, payment links, tills and custom domains
+  stop working. Its payments and records are kept.
 
-The first time you sign in, a short guided tour shows you around Account Home and your first
+The first time you sign in, a short guided tour shows you around Account home and your first
 business. Skip it whenever you like; it doesn't come back.
 
 ## Passwords
@@ -60,8 +71,10 @@ business. Skip it whenever you like; it doesn't come back.
 ## Two-step sign-in
 
 Two-step sign-in is optional, and recommended: with it on, a stolen password alone can't reach
-your account or your money. Turn it on from the **Account** page. You can hold several factors at
-once, and should, so that losing a phone doesn't lock you out.
+your account or your money. Turn it on in **Account settings**: from Account home, or from your
+account's menu (your initials, top right) in any business. It's your account's, not a business's:
+every business you own or join is reached through it. You can hold several factors at once, and
+should, so that losing a phone doesn't lock you out.
 
 | Factor                     | What it is                                                                                                                      |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -70,7 +83,7 @@ once, and should, so that losing a phone doesn't lock you out.
 | Recovery codes             | Ten codes of 16 characters, shown once with your first factor. Each works once, in place of a code. Save them somewhere safe.  |
 
 Codes are typed one digit per box, and a whole code goes at once: paste it, or let your phone fill
-it in. On the **Account** page you can add and remove factors, regenerate your recovery codes, and
+it in. In **Account settings** you can add and remove factors, regenerate your recovery codes, and
 change your password. Removing your last factor turns two-step sign-in off, and your recovery codes
 with it.
 
@@ -102,7 +115,7 @@ the dashboard asks, then carries on:
 
 - **A session** ends after 7 days without activity, and after 30 days in any case. The dashboard
   then returns you to the sign-in page, and back to where you were.
-- **The Account page** lists your active sessions with their browser, address and last activity.
+- **Account settings** list your active sessions with their browser, address and last activity.
   Sign out any of them, or every one but this.
 - **Sessions live in a cookie** bound to the dashboard's own address, sent only with the dashboard's
   own requests, and unreadable to scripts. Every change also carries a token the page holds, so
