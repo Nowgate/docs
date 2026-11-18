@@ -1,6 +1,6 @@
 ---
 title: Payment links
-description: "Reusable checkout pages that never expire, for a product, a ticket or donations: fixed or open prices, donors' messages and your branding."
+description: "Reusable checkout pages that never expire, for a product, a ticket or donations: fixed or open prices and your branding."
 ---
 
 A [payment link](/api/payment-links) is a reusable checkout page that never expires, for a product,
@@ -26,8 +26,9 @@ Share the link's `checkout_url`, put it behind a [button](/embeds#buttons), or o
 
 ## Donations
 
-A link can let donors leave a name and a message of up to 280 characters, and give anonymously. An
-anonymous donor's name is never stored. The payment's `donor` is plain text as entered: escape it
+Checkout asks payers for the coin and the amount alone, so a donation carries no name and no
+message. A link's `donations` settings stay in the API, and checkout no longer shows their fields.
+A payment made before 18 November 2026 may still have a `donor`, plain text as entered: escape it
 wherever you show it.
 
 ## Branding

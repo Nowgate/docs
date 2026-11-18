@@ -12,13 +12,17 @@ payer to its `checkout_url`:
 
 ## What payers see
 
-On a link's page, payers choose how to pay:
+On a link's page, payers choose the coin, then the amount:
 
-- the price, and each asset the link takes with what it costs now. An asset without a
-  [rate](/prices-and-rates) at the moment is shown, but can't be chosen.
-- for an open amount, its presets and, if you allow it, an amount of their own between your
-  minimum and maximum
-- for donations, a name and a message if they like, or neither
+1. **The coin.** The price, and each coin the link takes with what it costs now. A coin on
+   several networks, such as USDT or USDC, opens a window of its networks, and the payer picks
+   one. A coin without a [rate](/prices-and-rates) at the moment is shown, but can't be chosen.
+2. **The amount,** for an open amount, on a page of its own: its presets and, if you allow it, an
+   amount of their own between your minimum and maximum, each with what it comes to in the chosen
+   coin. The browser's back button returns to the coin.
+
+A fixed price goes from the coin straight to the payment. Payers type nothing else: no name and no
+message.
 
 A payment's page shows them how to pay it:
 
