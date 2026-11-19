@@ -91,6 +91,10 @@ it takes from your balance, and `amount_sent` what the destination receives.
 | `failed`              | It couldn't be sent, or the network refused it. `failure_reason` says why, and its cost is back in your balance. |
 | `canceled`            | You canceled it before it was signed, and its cost is back in your balance.                             |
 
+A `queued` payout whose `waiting_reason` is `safety_check` is one Nowgate has paused while it
+checks something: on every network, on one network, or for your business alone. Nothing is lost.
+It goes out once the check is done, and you can still cancel it meanwhile.
+
 Each payout sends `payout.created`, then `payout.<status>` on every change, to your
 [webhooks](/webhooks). Cancel one with `POST /v1/payouts/{id}/cancel` until it is signed; once it
 is `sending`, it can't be stopped.
