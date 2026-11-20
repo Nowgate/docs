@@ -14,12 +14,16 @@ Share the link's `checkout_url`, put it behind a [button](/embeds#buttons), or o
 
 ## Prices
 
-- **Fixed in a currency:** `price_amount` and `price_currency`; the payer picks one of the link's
-  `assets`, or any pair Nowgate follows when you list none. Each attempt gets its own quote, as in
+- **Fixed in a currency:** `price_amount` and `price_currency`; the payer picks any of the
+  [coins you accept](/accepted-coins). Each attempt gets its own quote, as in
   [Prices and rates](/prices-and-rates).
 - **Fixed in one asset:** `amount`, `network` and `asset`, as above.
 - **Open:** up to six preset amounts, and optionally an amount the payer enters between a minimum
   and a maximum.
+
+A link has no list of coins of its own: it follows your business's, so a change there reaches
+every link at once, the ones already shared too. A request's `assets` is still taken and changes
+nothing; an answer's `assets` is what a payer may choose now.
 
 `markup_bps`, `fee_paid_by` and `expires_in` work as on a payment, for each attempt. Each attempt's
 `order_id` can be numbered from `order_id_prefix`: `DONATE-1`, `DONATE-2` and so on.

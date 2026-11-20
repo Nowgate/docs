@@ -26,9 +26,8 @@ curl -X PUT https://api.nowgate.io/v1/forwarding \
 - **The destination must be active**: a new one waits first.
 - **Nothing under `min_amount`** is forwarded; it stays in your balance.
 - **Forwarding payouts are ordinary payouts**, with `source: "forwarding"`: the same statuses,
-  webhooks, limits and fees. The network fee comes out of what is forwarded
+  webhooks and fees. The network fee comes out of what is forwarded
   (`fee_paid_by: "payee"`), so your balance is left whole.
-- **They never wait for approval**: you approved the rule when you set it.
 - **Each credit is forwarded once**, and a daily rule forwards once a day.
 - **Setting the rules again** replaces them all at once; an empty list stops forwarding. A rule
   kept for an asset keeps its first time, so it doesn't forward again what came before it.

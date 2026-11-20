@@ -1,6 +1,6 @@
 ---
 title: Payouts
-description: Pay your balance out to your own wallets, singly, in batches or on a schedule, with destinations that wait, limits and approvals.
+description: Pay your balance out to your own wallets, singly, in batches or on a schedule, from the dashboard or with the API.
 ---
 
 What your customers pay stays in your balance, per asset, until you pay it out to a wallet of
@@ -9,6 +9,23 @@ another. The [API reference](/api/payouts) lists every field.
 
 Every call that moves money, or sets up its movement, needs a key with the `payouts` scope. Such a
 key is always bound to an IP allowlist, so a key copied off your server is of no use elsewhere.
+
+## In the dashboard
+
+The **Payouts** page lists the coins your business holds, each with its balance and a payout
+button. The button opens a box that asks for three things: the address, the amount, and
+[confirming it's you](/account-security#sensitive-actions-ask-again) with your password, or with
+your code or passkey if you turned two-step sign-in on. Nobody else approves a payout, and it is on
+its way once you make it.
+
+- **The address book** keeps the addresses you pay out to often, each under a name of your own.
+  Choose one in the payout box, or tick "Save this address" as you pay out to a new one. An entry
+  is on a network and serves every coin of it.
+- **They receive what you type.** The network fee is added on top; when your balance doesn't cover
+  that, as when you pay out everything with **Max**, it comes out of the amount. The box shows
+  what they receive before you pay out.
+- **History** lists every payout with its status and transaction, and a payout that hasn't been
+  signed can be canceled there.
 
 ## Your balance
 
@@ -67,12 +84,10 @@ it takes from your balance, and `amount_sent` what the destination receives.
   network can take, and reserved with the amount. Once the payout is finished, `network_fee` is
   what the network took and the rest is back in your balance: `amount_debited` then says what
   the payout cost you.
-- **Who pays the network fee:** with `fee_paid_by: "merchant"` (in the dashboard, "You pay the
-  fee — they get the full amount") the destination gets `amount`, and the fee comes from your
-  balance on top. With `"payee"` ("They pay the fee — taken from the amount") the quote comes out
-  of the amount, so the destination gets `amount` less the most the fee can be; what the network
-  doesn't take still comes back to your balance. The dashboard's payout form shows what the
-  destination will receive, and the most your balance pays, before you create the payout.
+- **Who pays the network fee:** with `fee_paid_by: "merchant"` the destination gets `amount`, and
+  the fee comes from your balance on top. With `"payee"` the quote comes out of the amount, so the
+  destination gets `amount` less the most the fee can be; what the network doesn't take still
+  comes back to your balance.
 - **Nowgate's payout fee** is `payout_fee`, 0.
 - When the network's fee can't be estimated right now, or a token can't be priced, the payout is
   refused with `fee_estimate_unavailable` or `rate_unavailable` (`503`). Retry shortly, with the
@@ -82,7 +97,6 @@ it takes from your balance, and `amount_sent` what the destination receives.
 
 | Status                | Meaning                                                                                                 |
 | --------------------- | ------------------------------------------------------------------------------------------------------- |
-| `awaiting_approval`   | Your account requires a person's approval, and nobody has given it yet.                                 |
 | `scheduled`           | `send_at` is still ahead.                                                                               |
 | `waiting_destination` | Its destination is new, and Nowgate's signer is registering it: within about a minute.                  |
 | `queued`              | Ready, and about to be sent. `waiting_reason` says why when it waits longer than usual.                 |
@@ -115,28 +129,21 @@ with every problem listed by item (`/items/3/amount`) or by CSV line (`/csv/line
 Each item is an ordinary payout with its own ID and events; the batch sends `batch.created`, and
 `batch.finished` once every item is final.
 
-## Limits
+## No limits, no approvals
 
-Each asset has a limit per payout and per day (payouts created in a rolling 24 hours), about
-10,000 USD and 50,000 USD of the asset by default. Batches, refunds and forwarding count too. A
-payout over a limit is refused with `payout_limit_exceeded`, which says what remains.
-
-## Approvals
-
-Your account can require a person's approval for every payout and refund: each then waits in
-`awaiting_approval` until a member of your team approves it in the dashboard, with their second
-factor bound to exactly what they approve. No API key can approve one, whatever its scopes: that is what
-makes it a second step. Under `two_person`, the approver must be someone other than the payout's
-creator. See [payout approvals](/approvals).
+A payout has no limit: any amount your available balance holds can go out, in one payout or in
+many. And nobody approves one: whoever may make a payout, in the dashboard or with a key, has made
+it. The status `awaiting_approval` and the `approved_at` field stay in the API's schema for
+payouts made before 20 November 2026, and a new payout never has them.
 
 ## In the sandbox
 
-The sandbox's payouts are simulated. They go through the same API, limits, reservations, statuses
-and webhooks, but no chain: a payout is `sending` at once, with a `sim:` transaction hash, and
+The sandbox's payouts are simulated. They go through the same API, reservations, statuses and
+webhooks, but no chain: a payout is `sending` at once, with a `sim:` transaction hash, and
 `finished` about 10 seconds later. Its network fee is a fixed, notional amount.
 
 - [`POST /v1/sandbox/payout-destinations/{id}/activate`](/api/sandbox) makes a new destination
-  usable at once, instead of after 5 minutes.
+  usable at once, instead of within about a minute.
 - [`POST /v1/sandbox/payouts/{id}/simulate`](/api/sandbox) with `action: "fail"` fails a payout
   that hasn't finished.
 - The sandbox's balance is its simulated deposits: a payout of a balance that came from a real

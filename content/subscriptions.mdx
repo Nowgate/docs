@@ -28,13 +28,14 @@ curl https://api.nowgate.io/v1/subscriptions \
 A plan is a price and how often it's paid: `day`, `week`, `month` or `year`, times
 `interval_count`, from a day up to a year.
 
-- **A price in a currency** (`price_amount` and `price_currency`, USD or EUR) is paid in any coin
-  you accept, at the rate when the subscriber pays, as a payment priced in a currency is. Limit the
-  coins with `assets`.
+- **A price in a currency** (`price_amount` and `price_currency`, USD or EUR) is paid in any of the
+  [coins you accept](/accepted-coins), at the rate when the subscriber pays, as a payment priced in
+  a currency is. A plan has no list of coins of its own: a request's `assets` is still taken and
+  changes nothing.
 - **A price in a coin** (`amount`, `network` and `asset`) is paid in that coin only.
 - **`trial_days`** gives new subscriptions a free trial, 0 to 365 days.
 - **The price and the period never change.** A new price is a new plan: move subscriptions to it
-  with a plan change. You can change a plan's name, description, trial, coins, markup and fee mode,
+  with a plan change. You can change a plan's name, description, trial, markup and fee mode,
   and archive it: an archived plan takes no new subscriptions, and its subscriptions carry on.
 
 ## Subscriptions and their statuses

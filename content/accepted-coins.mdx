@@ -1,0 +1,70 @@
+---
+title: Coins you accept
+description: Choose the coins your business accepts once, in the dashboard or with the API, and every checkout page of yours follows at once.
+---
+
+Your business accepts one list of coins. Every checkout page of yours offers from it: the
+[payment links](/payment-links) you have shared, [subscriptions'](/subscriptions) invoices, and the
+[point of sale](/point-of-sale). Change the list and all of them change with it, at once. Nothing
+about a link needs touching.
+
+A business that has never chosen accepts every coin Nowgate follows.
+
+## In the dashboard
+
+Under **Settings**, the **Coins** section lists every coin with a switch. Turn coins on and off,
+save, and from that moment:
+
+- every payment link priced in a currency, or with an open amount, offers exactly the coins that
+  are on, the links you made through the API and already sent to customers among them
+- a payer who opens a link sees the new list; a payment already made keeps its coin and completes
+  as usual
+- a new payment in a coin that is off is refused
+
+## With the API
+
+The same list is `GET /v1/accepted-assets`, and `PUT /v1/accepted-assets` replaces it. Reading
+takes any key; changing it takes a key with the `payments` scope. The
+[API reference](/api/assets#retrieve-the-assets-you-accept) has every field.
+
+<SdkTabs region="accepted-assets">
+
+```bash
+curl -X PUT https://api.nowgate.io/v1/accepted-assets \
+  -H "Authorization: Bearer $NOWGATE_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"assets":[{"network":"bsc","asset":"USDT"},{"network":"bsc","asset":"USDC"},{"network":"ethereum","asset":"USDT"}]}'
+```
+
+</SdkTabs>
+
+Reading it is `acceptedAssets.retrieve()` (Python: `accepted_assets.retrieve()`). The Python and
+PHP SDKs have both calls from version 0.2.0.
+
+- **The list is replaced whole,** with at least one pair. Pairs are the ones
+  [`GET /v1/assets`](/api/assets) lists.
+- **It is your business's, not a key's:** every key of the business, and the dashboard, read and
+  change the same list.
+- **A coin Nowgate adds later** is not accepted until you add it. A business that has never
+  chosen takes it at once.
+
+## What follows the list
+
+| Where                                     | What a payer may choose                                         |
+| ----------------------------------------- | --------------------------------------------------------------- |
+| A payment link priced in a currency       | Any coin you accept                                             |
+| A payment link with an open amount        | Any coin you accept                                             |
+| A payment link priced in one coin         | That coin, while you accept it                                  |
+| A subscription's invoice                  | Any coin you accept; its own coin for a plan priced in one coin |
+| The point of sale                         | The coins you accept that the till's settings leave on          |
+| `POST /v1/payments`                       | The coin you name, refused as `asset_disabled` if it is off     |
+
+### A link has no list of its own
+
+Until 20 November 2026 a payment link and a plan could carry their own `assets`, which narrowed
+what the business accepted. That list is no longer used: your business's coins decide for every
+link. A request that still sends `assets` keeps working, and the field changes nothing. In an
+answer, a link's `assets` is what a payer may choose now.
+
+If your server set `assets` on each link, you can stop sending it. To change what your customers
+are offered, change your business's list instead, once.

@@ -7,6 +7,21 @@ description: The networks and assets you can accept.
 
 <Operation id="listAssets" />
 
+## Retrieve the assets you accept
+
+Your business's own list, which every checkout page of yours offers from. See
+[Coins you accept](/accepted-coins).
+
+<Operation id="getAcceptedAssets" scope="read" />
+
+## Set the assets you accept
+
+<Operation id="setAcceptedAssets" scope="payments" />
+
 ## The asset object
 
 <SchemaBlock name="Asset" />
+
+## The accepted assets object
+
+<SchemaBlock name="AcceptedAssets" />

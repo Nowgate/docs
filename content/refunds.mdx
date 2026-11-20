@@ -44,8 +44,8 @@ Once finished refunds reach what the payment credited, it becomes `refunded` and
 
 - **The network fee comes out of the refund** by default (`fee_paid_by: "payee"`); send
   `fee_paid_by: "merchant"` to pay it yourself.
-- **A refund is a payout** of kind refund, with an `rf_` ID: the same statuses, limits and
-  approvals. It sends `refund.created`, then `refund.<status>` on every change.
+- **A refund is a payout** of kind refund, with an `rf_` ID: the same statuses, with nobody's
+  approval to wait for. It sends `refund.created`, then `refund.<status>` on every change.
 - **Cancel one** with `POST /v1/refunds/{id}/cancel` until it is signed; its hold comes back to
   your balance and to the payment.
 - **Refused:** `not_refundable` when the payment isn't finished or closed, or its refunds already

@@ -4,8 +4,7 @@ description: Invite members, give each one a role or their own permissions per s
 ---
 
 A business in the dashboard has one owner and any number of members. Each member's permissions
-are set per section of the dashboard, and every change they make is recorded in the
-[activity trail](#activity).
+are set per section of the dashboard.
 
 ## Members
 
@@ -27,34 +26,32 @@ Each member has a level per section: none, view or manage.
 | ------------ | ------------------------------------------------------------ | ------------------------------------------------------------------- |
 | Payments     | Payments, their transfers and events; CSV export; stuck deposits | Accepting and returning [stuck deposits](/stuck-deposits)       |
 | Links        | Payment links                                                | Creating, changing and archiving links; logos                       |
-| Payouts      | Balances, destinations, payouts, batches, forwarding         | Destinations, payouts, batches and schedules; canceling; forwarding |
+| Payouts      | Balances, the address book and the payouts' history          | Paying out; saving addresses; canceling a payout                    |
 | Refunds      | Refunds                                                      | Creating and canceling refunds                                      |
 | Developers   | API keys' details; webhook endpoints, events and deliveries  | Keys, endpoints, secrets, replays and test events                   |
 | Settings     | The business's profile, branding, coins, receipts and defaults | Changing them                                                     |
 | Team         | Members and invitations                                      | Inviting, changing, removing; cashiers and their PINs               |
 | POS          | Tills and POS reports                                        | Creating, pairing, renaming and revoking tills; POS settings        |
-| Activity     | The activity trail                                           | —                                                                   |
 
-Two permissions stand apart:
+One permission stands apart: **Sell** lets a member with a PIN sign in on your tills.
 
-- **Approve payouts** lets a member [approve payouts](/approvals). It is separate from managing
-  payouts, so whoever creates payouts needn't be whoever approves them.
-- **Sell** lets a member with a PIN sign in on your tills.
+A member who manages payouts can pay out any amount of the balance, to any address: nobody else
+approves a payout. Give that level only to people you would trust with the business's wallet.
 
 ## Roles
 
 A role fills in the permissions. Change any of them one by one and the member's role becomes
 `custom`.
 
-| Role      | Payments | Links  | Payouts | Refunds | Developers | Settings | Team   | POS    | Activity | Approve | Sell |
-| --------- | -------- | ------ | ------- | ------- | ---------- | -------- | ------ | ------ | -------- | ------- | ---- |
-| owner     | manage   | manage | manage  | manage  | manage     | manage   | manage | manage | view     | yes     | yes  |
-| admin     | manage   | manage | manage  | manage  | manage     | manage   | manage | manage | view     | yes     | yes  |
-| finance   | view     | view   | manage  | manage  | none       | view     | none   | view   | view     | yes     | no   |
-| developer | view     | manage | view    | none    | manage     | view     | none   | none   | view     | no      | no   |
-| support   | manage   | view   | view    | manage  | none       | none     | none   | view   | none     | no      | no   |
-| viewer    | view     | view   | view    | view    | view       | view     | view   | view   | view     | no      | no   |
-| cashier   | none     | none   | none    | none    | none       | none     | none   | none   | none     | no      | yes  |
+| Role      | Payments | Links  | Payouts | Refunds | Developers | Settings | Team   | POS    | Sell |
+| --------- | -------- | ------ | ------- | ------- | ---------- | -------- | ------ | ------ | ---- |
+| owner     | manage   | manage | manage  | manage  | manage     | manage   | manage | manage | yes  |
+| admin     | manage   | manage | manage  | manage  | manage     | manage   | manage | manage | yes  |
+| finance   | view     | view   | manage  | manage  | none       | view     | none   | view   | no   |
+| developer | view     | manage | view    | none    | manage     | view     | none   | none   | no   |
+| support   | manage   | view   | view    | manage  | none       | none     | none   | view   | no   |
+| viewer    | view     | view   | view    | view    | view       | view     | view   | view   | no   |
+| cashier   | none     | none   | none    | none    | none       | none     | none   | none   | yes  |
 
 - Nobody can give permissions they don't hold themselves.
 - An admin can't change the owner's permissions.
@@ -95,15 +92,10 @@ Only the owner can delete the business, from
   with the sell permission appear on your tills, by name and nothing more.
 - **Guessing is throttled** on each till: see [the point of sale](/point-of-sale#cashiers-and-shifts).
 
-## Activity
-
-The **Activity** page lists everything done in your business: who did what and when, through the
-dashboard, an API key, a till or Nowgate's operators, with the client address. Filter it by member,
-action and date. Team changes, keys, endpoints, payouts, settings and exports are all there.
-
 ## Notices
 
 Nowgate emails the owner and admins of each business when it **receives a payment** and when a
 **payout is sent**, and the owner when they **make a business**. Each email links to the page in
-the dashboard; a link never acts by itself, because mail scanners follow links. Everything else your
-team does is on the **Activity** page.
+the dashboard; a link never acts by itself, because mail scanners follow links. The members who
+manage payouts are also emailed when a payout goes to an address the business hasn't paid before,
+or one is saved to the address book.
